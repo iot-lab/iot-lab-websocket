@@ -1,0 +1,54 @@
+import os
+from os.path import join as pjoin
+from setuptools import setup, find_packages
+
+PACKAGE = 'iotlabwebserial'
+
+
+def readme(fname):
+    """Utility function to read the README. Used for long description."""
+    return open(os.path.join(os.path.dirname(__file__), fname)).read()
+
+
+def get_version(package):
+    """Extract package version without importing file.
+
+    Inspired from pep8 setup.py.
+    """
+    with open(os.path.join(package, '__init__.py')) as init_fd:
+        for line in init_fd:
+            if line.startswith('__version__'):
+                return eval(line.split('=')[-1])
+
+if __name__ == '__main__':
+
+    setup(name=PACKAGE,
+          version=get_version(PACKAGE),
+          description=('Provides tools to interact with IoT-LAB nodes from'
+                       'a websocket connection.'),
+          long_description=readme('README.md'),
+          author='IoT-LAB Team',
+          author_email='admin@iot-lab.info',
+          url='http://www.iot-lab.info',
+          license='BSD',
+          keywords="iot websocket serial web",
+          platforms='any',
+          packages=find_packages(),
+          scripts=[pjoin('bin', 'iotlabwebserial-application'),
+                   pjoin('bin', 'iotlabwebserial-client')],
+          install_requires=[
+            'tornado>=5.0',
+          ],
+          classifiers=[
+            'Development Status :: 4 - Beta',
+            'Programming Language :: Python :: 2.7',
+            'Programming Language :: Python :: 3.4',
+            'Programming Language :: Python :: 3.5',
+            'Programming Language :: Python :: 3.6',
+            'Intended Audience :: Developers',
+            'Environment :: Console',
+            'Topic :: Communications',
+            'License :: OSI Approved :: ',
+            'License :: OSI Approved :: BSD License'],
+          zip_safe=False,
+          )
