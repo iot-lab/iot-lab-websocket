@@ -42,7 +42,6 @@ class NodeHandlerTest(AsyncTestCase):
         # Connect to the TCP server stub
         yield node_handler.start_tcp_connection("localhost", 20000)
         assert node_handler.tcp_ready
-        assert node_handler.tcp is not None
         assert node_handler.node == "localhost"
 
         # Preparing the websocket mock
