@@ -33,37 +33,43 @@ class WebApplication(tornado.web.Application):
 
         super(WebApplication, self).__init__(handlers, **settings)
 
-    def handle_websocket_validation(self, ws):
-        handler = self.handlers[ws.node]
+    def handle_websocket_validation(self, websocket):
+        """Handle the websocket connection once authentified."""
+        node = websocket.node
+        handler = self.handlers[node]
         if not handler.websockets:
             # Open the tcp connection on first websocket connection.
-            handler.start_tcp_connection(ws.node, NODE_TCP_PORT)
-        handler.websockets.append(ws)
+            handler.start_tcp_connection(node, NODE_TCP_PORT)
+        handler.websockets.append(websocket)
 
-    def handle_websocket_message(self, ws, message):
-        handler = self.handlers[ws.node]
+    def handle_websocket_message(self, websocket, message):
+        """Handle a message coming from a websocket."""
+        handler = self.handlers[websocket.node]
         if handler.tcp_ready:
             handler.tcp.write(message.encode())
         else:
             LOGGER.debug("No TCP connection opened, skipping message")
-            ws.write_message("No TCP connection opened, cannot send "
-                             "message '{}'.\n".format(message))
+            websocket.write_message("No TCP connection opened, cannot send "
+                                    "message '{}'.\n".format(message))
 
-    def handle_websocket_close(self, ws):
-        handler = self.handlers[ws.node]
-        handler.websockets.remove(ws)
+    def handle_websocket_close(self, websocket):
+        """Handle the disconnection of a websocket."""
+        handler = self.handlers[websocket.node]
+        handler.websockets.remove(websocket)
 
         # websockets list is now empty for given node, closing tcp connection.
         if handler.tcp_ready and not handler.websockets:
-            LOGGER.debug("Closing TCP connection to node '%s'", ws.node)
+            LOGGER.debug("Closing TCP connection to node '%s'", websocket.node)
             handler.tcp.close()
             del handler
 
     def handle_http_post(self, node, key):
+        """Handle an HTTP POST request."""
         self.handlers[node].key = key
 
 
 def parse_command_line():
+    """Parse the command line of the web application."""
     parser = argparse.ArgumentParser(description="Test Websocket node")
     parser.add_argument('--port', type=str, default="8000",
                         help="Listening port")
@@ -74,6 +80,7 @@ def parse_command_line():
 
 
 def main():
+    """Main function of the web application."""
     args = parse_command_line()
     start_application(WebApplication(debug=args.debug), args.port)
 
