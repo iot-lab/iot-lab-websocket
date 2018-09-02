@@ -10,16 +10,16 @@ The application supports Python 2.7 and 3.5 minimum.
 
 ## Installation
 
-Install the tornado web framework:
+Install using pip:
 
-    pip install tornado --pre
+    pip install . --pre
 
 ## How to use
 
 - Start the application from the command line:
 
   ```shell
-  python application.py --debug --port 8000
+  iotlabwebserial-application --debug --port 8000
   ```
 
 - For a given node, set the key required to access its serial port:
@@ -31,5 +31,5 @@ Install the tornado web framework:
 - Start the websocket client:
 
   ```shell
-    python websocket_cli.py --host localhost --port 8000 --key key
+  iotlabwebserial- --host localhost --port 8000 --key key
   ```
