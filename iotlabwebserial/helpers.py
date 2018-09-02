@@ -28,8 +28,9 @@ def signal_handler(server, app_close, sig, frame):
     ioloop.add_callback_from_signal(shutdown)
 
 
-def start_application(app):
+def start_application(app, port):
     """Start a tornado application."""
-    server = app.listen(options.port)
+    server = app.listen(port)
     signal.signal(signal.SIGTERM, partial(signal_handler, server, None))
     signal.signal(signal.SIGINT, partial(signal_handler, server, None))
+    LOGGER.debug('Application started, listening on port {}'.format(port))

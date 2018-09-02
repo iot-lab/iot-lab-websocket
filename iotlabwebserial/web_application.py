@@ -1,9 +1,10 @@
+"""iotlabwebserial main web application."""
 
+import argparse
 import logging
 from collections import defaultdict
 
 import tornado
-from tornado.options import define, options
 
 from .node_handler import NodeHandler
 from .http_handler import HttpRequestHandler
@@ -18,8 +19,8 @@ NODE_TCP_PORT = 20000
 class WebApplication(tornado.web.Application):
     """IoT-LAB websocket to tcp redirector."""
 
-    def __init__(self):
-        if options.debug:
+    def __init__(self, debug=False):
+        if debug:
             LOGGER.setLevel(logging.DEBUG)
 
         handlers = [
@@ -31,8 +32,6 @@ class WebApplication(tornado.web.Application):
         self.handlers = defaultdict(NodeHandler)
 
         super(WebApplication, self).__init__(handlers, **settings)
-        LOGGER.debug('Application started, listening on port {}'
-                     .format(options.port))
 
     def handle_websocket_validation(self, ws):
         handler = self.handlers[ws.node]
@@ -65,17 +64,17 @@ class WebApplication(tornado.web.Application):
 
 
 def parse_command_line():
-    """Parse command line arguments for any Pyaiot application."""
-    if not hasattr(options, "port"):
-        define("port", default=8000, help="Websocket redirector port")
-    if not hasattr(options, "debug"):
-        define("debug", default=False, help="Enable debug mode.")
-
-    options.parse_command_line()
+    parser = argparse.ArgumentParser(description="Test Websocket node")
+    parser.add_argument('--port', type=str, default="8000",
+                        help="Listening port")
+    parser.add_argument('--debug', action='store_true',
+                        help="Enable debug mode")
+    args = parser.parse_args()
+    return args
 
 
 def main():
-    parse_command_line()
-    start_application(WebApplication())
+    args = parse_command_line()
+    start_application(WebApplication(debug=args.debug), args.port)
 
     tornado.ioloop.IOLoop.current().start()

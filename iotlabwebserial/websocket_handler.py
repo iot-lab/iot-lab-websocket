@@ -7,7 +7,7 @@ LOGGER = logging.getLogger("iotlabwebserial")
 
 
 class WebsocketClientHandler(websocket.WebSocketHandler):
-    
+
     authentified = False
 
     def check_origin(self, origin):
@@ -37,7 +37,7 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
             expected_key = self.application.handlers[self.node].key
             LOGGER.debug("Websocket authentication, received key: %s, "
                          "expected key: %s", message, expected_key)
-            self.authentified = (expected_key is not None and 
+            self.authentified = (expected_key is not None and
                                  message == expected_key)
             if self.authentified:
                 LOGGER.debug("Websocket authentication succeeded for node "

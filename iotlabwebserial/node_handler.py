@@ -10,11 +10,13 @@ LOGGER = logging.getLogger(__file__)
 
 class NodeHandler(object):
 
-    def __init__(self):
-        self.tcp = None
+    def __init__(self, debug=False):
         self.websockets = list()
         self.tcp_ready = False
-        self.key = None
+        self.node = None
+
+        if debug:
+            LOGGER.setLevel(logging.DEBUG)
 
     def _close_all_websockets(self):
         for ws in self.websockets:
@@ -23,6 +25,7 @@ class NodeHandler(object):
     @gen.coroutine
     def start_tcp_connection(self, node, port):
         self.tcp_ready = False
+        self.node = node
         try:
             LOGGER.debug("Opening TCP connection to '%s:%d'", node, port)
             self.tcp = yield tcpclient.TCPClient().connect(
@@ -34,10 +37,13 @@ class NodeHandler(object):
             self._close_all_websockets()
             return
         self.tcp_ready = True
+        self._read_stream()
 
+    @gen.coroutine
+    def _read_stream(self):
+        LOGGER.debug("Listening to TCP connection.")
         try:
             while True:
-                # data = yield self.tcp.read_until(b'\n')
                 data = yield self.tcp.read_bytes(1)
                 try:
                     data_decoded = data.decode()
@@ -50,4 +56,4 @@ class NodeHandler(object):
         except StreamClosedError:
             self.tcp_ready = False
             self._close_all_websockets()
-            LOGGER.debug("TCP connection to '%s' is closed.", node)
+            LOGGER.debug("TCP connection to '%s' is closed.", self.node)
