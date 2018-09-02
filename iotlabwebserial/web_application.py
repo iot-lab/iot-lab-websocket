@@ -42,15 +42,15 @@ class WebApplication(tornado.web.Application):
             handler.start_tcp_connection(node, NODE_TCP_PORT)
         handler.websockets.append(websocket)
 
-    def handle_websocket_message(self, websocket, message):
+    def handle_websocket_data(self, websocket, data):
         """Handle a message coming from a websocket."""
         handler = self.handlers[websocket.node]
         if handler.tcp_ready:
-            handler.tcp.write(message.encode())
+            handler.tcp.write(data.encode())
         else:
             LOGGER.debug("No TCP connection opened, skipping message")
-            websocket.write_message("No TCP connection opened, cannot send "
-                                    "message '{}'.\n".format(message))
+            websocket.write_data("No TCP connection opened, cannot send "
+                                 "message '{}'.\n".format(data))
 
     def handle_websocket_close(self, websocket):
         """Handle the disconnection of a websocket."""
