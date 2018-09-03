@@ -1,5 +1,6 @@
 """Management of the TCP connection to a node."""
 
+import socket
 import logging
 
 from tornado import gen, tcpclient
@@ -43,7 +44,7 @@ class NodeHandler(object):
             LOGGER.debug("Opening TCP connection to '%s:%d'", node, port)
             self._tcp = yield tcpclient.TCPClient().connect(node, port)
             LOGGER.debug("TCP connection opened on '%s:%d'", node, port)
-        except StreamClosedError:
+        except (StreamClosedError, socket.gaierror):
             LOGGER.debug("Cannot open TCP connection to %s:%s", node, port)
             # We can't connect to the node with TCP, closing all websockets
             self.stop()
