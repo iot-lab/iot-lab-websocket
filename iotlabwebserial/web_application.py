@@ -1,6 +1,5 @@
 """iotlabwebserial main web application."""
 
-import argparse
 import logging
 from collections import defaultdict
 
@@ -9,7 +8,6 @@ import tornado
 from .node_handler import NodeHandler
 from .http_handler import HttpRequestHandler
 from .websocket_handler import WebsocketClientHandler
-from .helpers import start_application
 
 LOGGER = logging.getLogger("iotlabwebserial")
 
@@ -19,17 +17,16 @@ NODE_TCP_PORT = 20000
 class WebApplication(tornado.web.Application):
     """IoT-LAB websocket to tcp redirector."""
 
-    def __init__(self, debug=False):
-        if debug:
-            LOGGER.setLevel(logging.DEBUG)
-
+    def __init__(self):
         handlers = [
-            (r"/node/key", HttpRequestHandler),
+            (r"/experiment/start", HttpRequestHandler),
+            (r"/experiment/stop", HttpRequestHandler),
             (r"/ws/localhost", WebsocketClientHandler, dict(node='localhost')),
         ]
         settings = {'debug': True}
 
         self.handlers = defaultdict(NodeHandler)
+        self.experiments = defaultdict(list)
 
         super(WebApplication, self).__init__(handlers, **settings)
 
@@ -39,14 +36,14 @@ class WebApplication(tornado.web.Application):
         handler = self.handlers[node]
         if not handler.websockets:
             # Open the tcp connection on first websocket connection.
-            handler.start_tcp_connection(node, NODE_TCP_PORT)
+            handler.start(node, NODE_TCP_PORT)
         handler.websockets.append(websocket)
 
     def handle_websocket_data(self, websocket, data):
         """Handle a message coming from a websocket."""
         handler = self.handlers[websocket.node]
         if handler.tcp_ready:
-            handler.tcp.write(data.encode())
+            handler.send(data.encode())
         else:
             LOGGER.debug("No TCP connection opened, skipping message")
             websocket.write_data("No TCP connection opened, cannot send "
@@ -60,28 +57,21 @@ class WebApplication(tornado.web.Application):
         # websockets list is now empty for given node, closing tcp connection.
         if handler.tcp_ready and not handler.websockets:
             LOGGER.debug("Closing TCP connection to node '%s'", websocket.node)
-            handler.tcp.close()
+            handler.stop()
             del handler
 
-    def handle_http_post(self, node, key):
+    def handle_start_experiment(self, experiment_id, nodes, key):
         """Handle an HTTP POST request."""
-        self.handlers[node].key = key
+        LOGGER.debug("Handle start experiment ('%s')", experiment_id)
+        self.experiments[experiment_id] = nodes
+        for node in nodes:
+            self.handlers[node].key = key
 
-
-def parse_command_line():
-    """Parse the command line of the web application."""
-    parser = argparse.ArgumentParser(description="Test Websocket node")
-    parser.add_argument('--port', type=str, default="8000",
-                        help="Listening port")
-    parser.add_argument('--debug', action='store_true',
-                        help="Enable debug mode")
-    args = parser.parse_args()
-    return args
-
-
-def main():
-    """Main function of the web application."""
-    args = parse_command_line()
-    start_application(WebApplication(debug=args.debug), args.port)
-
-    tornado.ioloop.IOLoop.current().start()
+    def handle_stop_experiment(self, experiment_id):
+        """Handle an HTTP POST request."""
+        LOGGER.debug("Handle stop experiment ('%s')", experiment_id)
+        nodes = self.experiments[experiment_id]
+        for node in nodes:
+            self.handlers[node].stop()
+            del self.handlers[node]
+        del self.experiments[experiment_id]

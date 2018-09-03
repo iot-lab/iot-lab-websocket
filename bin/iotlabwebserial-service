@@ -2,7 +2,41 @@
 
 """iotlabwebserial application entrypoint"""
 
-from iotlabwebserial.web_application import main
+import argparse
+import logging
+
+import tornado
+
+from iotlabwebserial.helpers import start_application
+from iotlabwebserial.web_application import WebApplication
+
+logging.basicConfig(format='%(asctime)-15s %(filename)25s:%(lineno)d '
+                           '%(levelname)-5s %(message)s')
+LOGGER = logging.getLogger("iotlabwebserial")
+LOGGER.setLevel(logging.INFO)
+
+
+def parse_command_line():
+    """Parse the command line of the web application."""
+    parser = argparse.ArgumentParser(description="Test Websocket node")
+    parser.add_argument('--port', type=str, default="8000",
+                        help="Listening port")
+    parser.add_argument('--debug', action='store_true',
+                        help="Enable debug mode")
+    args = parser.parse_args()
+    return args
+
+
+def main():
+    """Main function of the web application."""
+    args = parse_command_line()
+    if args.debug:
+        LOGGER.setLevel(logging.DEBUG)
+    start_application(WebApplication(), args.port)
+    LOGGER.info('Application started, listening on port %s', args.port)
+
+    tornado.ioloop.IOLoop.current().start()
+
 
 if __name__ == '__main__':
     main()

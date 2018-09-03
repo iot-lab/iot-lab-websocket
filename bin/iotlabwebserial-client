@@ -4,10 +4,14 @@
 
 import sys
 import argparse
+import logging
 
 import tornado
 
 from iotlabwebserial.websocket_client import WebsocketClient
+
+logging.basicConfig(format='%(asctime)-15s %(filename)s:%(lineno)d '
+                           '%(levelname)-5s %(message)s')
 
 
 def parse_command_line():
