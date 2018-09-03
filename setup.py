@@ -34,7 +34,7 @@ if __name__ == '__main__':
           keywords="iot websocket serial web",
           platforms='any',
           packages=find_packages(),
-          scripts=[pjoin('bin', 'iotlabwebserial-application'),
+          scripts=[pjoin('bin', 'iotlabwebserial-service'),
                    pjoin('bin', 'iotlabwebserial-client')],
           install_requires=[
             'tornado>=5.0',
