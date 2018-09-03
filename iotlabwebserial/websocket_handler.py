@@ -38,7 +38,7 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
             self.close()
 
     @gen.coroutine
-    def data_received(self, data):
+    def on_message(self, data):
         """Triggered when data is received from the websocket client."""
         if not self.authentified:
             # While not authentified, any message received should contain
