@@ -19,6 +19,7 @@ LOGGER.setLevel(logging.INFO)
 def parse_command_line():
     """Parse the command line of the web application."""
     parser = argparse.ArgumentParser(description="Test Websocket node")
+    parser.add_argument('nodes', nargs='+', help='List of nodes')
     parser.add_argument('--port', type=str, default="8000",
                         help="Listening port")
     parser.add_argument('--debug', action='store_true',
@@ -32,7 +33,7 @@ def main():
     args = parse_command_line()
     if args.debug:
         LOGGER.setLevel(logging.DEBUG)
-    start_application(WebApplication(), args.port)
+    start_application(WebApplication(args.nodes), args.port)
     LOGGER.info('Application started, listening on port %s', args.port)
 
     tornado.ioloop.IOLoop.current().start()

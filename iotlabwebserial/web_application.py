@@ -17,13 +17,16 @@ NODE_TCP_PORT = 20000
 class WebApplication(tornado.web.Application):
     """IoT-LAB websocket to tcp redirector."""
 
-    def __init__(self):
+    def __init__(self, known_nodes):
+        settings = {'debug': True}
         handlers = [
             (r"/experiment/start", HttpRequestHandler),
             (r"/experiment/stop", HttpRequestHandler),
-            (r"/ws/localhost", WebsocketClientHandler, dict(node='localhost')),
         ]
-        settings = {'debug': True}
+        for node in known_nodes:
+            LOGGER.debug("Add websocket handler for node '%s'", node)
+            handlers += (r"/ws/{}".format(node), WebsocketClientHandler,
+                         dict(node=node)),
 
         self.handlers = defaultdict(NodeHandler)
         self.experiments = defaultdict(list)

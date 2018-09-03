@@ -17,7 +17,7 @@ LOGGER.setLevel(logging.DEBUG)
 class TestHttpHandlerApp(tornado.testing.AsyncHTTPTestCase):
 
     def get_app(self):
-        return WebApplication()
+        return WebApplication(['localhost'])
 
     def _check_request(self, body, expected_response,
                        headers={"Content-Type": "application/json"},
