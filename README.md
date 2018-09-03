@@ -25,7 +25,7 @@ Install using pip:
 - For a given node, set the key required to access its serial port:
 
   ```shell
-  curl --header "Content-Type: application/json" --request POST --data '{"node":"localhost","key":"key"}' http://localhost:8000/node/key
+  curl --header "Content-Type: application/json" --request POST --data '{"experiment_id":123,"nodes":["localhost"],"key":"key"}' http://localhost:8000/experiment/start
   ```
 
 - Start the websocket client:
