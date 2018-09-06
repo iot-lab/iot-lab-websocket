@@ -28,7 +28,7 @@ class WebsocketClient(object):
         try:
             self.websocket = yield websocket_connect(
                 self.url, subprotocols=['auth_token', self.token])
-        except (ConnectionRefusedError, HTTPClientError) as exc:
+        except HTTPClientError as exc:
             LOGGER.error("Websocket connection failed: %s", exc)
             return
         LOGGER.debug("Websocket connection opened.")

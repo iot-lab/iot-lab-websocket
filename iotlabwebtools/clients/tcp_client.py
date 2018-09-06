@@ -18,6 +18,8 @@ class TCPClient(object):
         self.ready = False
         self.node = None
         self._tcp = None
+        self.on_close = None
+        self.on_data = None
 
     def send(self, data):
         """Send data via the TCP connection."""
@@ -27,9 +29,10 @@ class TCPClient(object):
 
     def stop(self):
         """Stop the TCP connection and close any opened websocket."""
-        self.on_close(self.node)
         if self.ready:
             self._tcp.close()
+        else:
+            self.on_close(self.node)
 
     @gen.coroutine
     def start(self, node, on_data, on_close):

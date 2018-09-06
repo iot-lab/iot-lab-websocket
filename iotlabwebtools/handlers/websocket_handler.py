@@ -4,13 +4,14 @@ import json
 import logging
 
 from tornado import websocket, gen
-from tornado.httpclient import AsyncHTTPClient, HTTPRequest
+from tornado.httpclient import AsyncHTTPClient, HTTPRequest, HTTPError
 
 LOGGER = logging.getLogger("iotlabwebtools")
 
 
 class WebsocketClientHandler(websocket.WebSocketHandler):
     # pylint:disable=abstract-method,arguments-differ
+    # pylint:disable=attribute-defined-outside-init
     """Class that manage websocket connections."""
 
     def _check_path(self):
@@ -42,7 +43,7 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
             LOGGER.warning("Reject websocket connection: invalib subprotocol")
             self.set_status(401)  # Authentication failed
             self.finish("Invalid subprotocols")
-            return False
+            raise gen.Return(False)
 
         token = subprotocols[1]
 
@@ -52,15 +53,15 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
                                                    self.experiment_id))
         try:
             response = yield http_client.fetch(request)
-        except Exception as exc:
+        except HTTPError as exc:
             LOGGER.warning("Failed to fetch token: %s", exc)
             self.set_status(401)  # Authentication failed
             self.finish("Failed to fetch token")
-            return False
+            raise gen.Return(False)
 
         try:
             auth_token = json.loads(response.body.decode())['token']
-        except json.JSONDecodeError as exc:
+        except ValueError as exc:
             LOGGER.warning("Cannot decode token: %s", exc)
 
         LOGGER.debug("Fetched token '%s' for experiment id '%s'",
@@ -70,9 +71,9 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
             LOGGER.warning("Reject websocket connection: invalib token")
             self.set_status(401)  # Authentication failed
             self.finish("Invalid token")
-            return False
+            raise gen.Return(False)
 
-        return True
+        raise gen.Return(True)
 
     def initialize(self, auth_url=""):
         """Initialize the authentication url where tokens are retrieved."""

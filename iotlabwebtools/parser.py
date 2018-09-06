@@ -2,12 +2,14 @@
 
 import argparse
 
-DEFAULT_AUTH_URL = "http://localhost:8000/experiments"
+from .web_application import DEFAULT_AUTH_URL
 
 
 def common_parser(description):
     """Return the common cli parser of all web tools."""
     parser = argparse.ArgumentParser(description=description)
+    parser.add_argument('--token', type=str, default="",
+                        help="token used for websocket authentication")
     parser.add_argument('--debug', action='store_true',
                         help="Enable debug mode")
     return parser
@@ -34,6 +36,4 @@ def websocket_cli_parser():
                         help="node hostname")
     parser.add_argument('--id', type=str, default="",
                         help="experiment id associated to node")
-    parser.add_argument('--token', type=str, default="",
-                        help="token used for websocket authentication")
     return parser

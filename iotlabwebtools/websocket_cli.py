@@ -10,6 +10,7 @@ from .parser import websocket_cli_parser
 
 logging.basicConfig(format='%(asctime)-15s %(filename)s:%(lineno)d '
                            '%(levelname)-5s %(message)s')
+LOGGER = logging.getLogger("iotlabwebtools")
 
 
 def main(args=None):
@@ -22,6 +23,6 @@ def main(args=None):
         ws_client.run()
         tornado.ioloop.IOLoop.current().start()
     except KeyboardInterrupt:
-        print("Exiting")
+        LOGGER.info("Exiting")
         tornado.ioloop.IOLoop.current().stop()
         sys.exit()

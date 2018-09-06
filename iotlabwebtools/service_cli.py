@@ -44,7 +44,8 @@ def main(args=None):
     args = args or service_cli_parser().parse_args()
     if args.debug:
         LOGGER.setLevel(logging.DEBUG)
-    start_application(WebApplication(auth_url=args.auth_url), args.port)
+    start_application(WebApplication(auth_url=args.auth_url,
+                                     token=args.token), args.port)
     LOGGER.info('Application started, listening on port %s', args.port)
 
     tornado.ioloop.IOLoop.current().start()

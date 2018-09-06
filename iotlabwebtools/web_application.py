@@ -11,16 +11,21 @@ from .handlers.websocket_handler import WebsocketClientHandler
 
 LOGGER = logging.getLogger("iotlabwebtools")
 
+DEFAULT_AUTH_URL = "http://localhost:8000/experiments"
+
 
 class WebApplication(tornado.web.Application):
     """IoT-LAB websocket to tcp redirector."""
 
-    def __init__(self, auth_url):
+    def __init__(self, auth_url, token=''):
         settings = {'debug': True}
         handlers = [
-            (r"/ws/.*/.*", WebsocketClientHandler, dict(auth_url=auth_url)),
-            (r"/experiments/.*/token", HttpAuthRequestHandler),
+            (r"/ws/.*/.*", WebsocketClientHandler, dict(auth_url=auth_url))
         ]
+
+        if auth_url == DEFAULT_AUTH_URL:
+            handlers.append((r"/experiments/.*/token", HttpAuthRequestHandler,
+                             dict(token=token)))
 
         self.tcp_clients = defaultdict(TCPClient)
         self.websockets = defaultdict(list)

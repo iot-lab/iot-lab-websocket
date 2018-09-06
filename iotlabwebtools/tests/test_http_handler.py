@@ -6,7 +6,7 @@ from collections import namedtuple
 
 import tornado.testing
 
-from iotlabwebtools.web_application import WebApplication
+from iotlabwebtools.web_application import WebApplication, DEFAULT_AUTH_URL
 
 Response = namedtuple("Response", ["code", "body"])
 
@@ -17,57 +17,33 @@ LOGGER.setLevel(logging.DEBUG)
 class TestHttpAuthHandlerApp(tornado.testing.AsyncHTTPTestCase):
 
     def get_app(self):
-        return WebApplication(['localhost'])
+        return WebApplication(DEFAULT_AUTH_URL, 'token')
 
-    def _check_request(self, body, expected_response,
-                       headers={"Content-Type": "application/json"},
-                       path='/experiment/start'):
-        response = self.fetch(path, method="POST", headers=headers, body=body)
+    def _check_request(self, expected_response, path='/experiments/123/token',
+                       headers={"Content-Type": "application/json"}):
+        response = self.fetch(path, method="GET", headers=headers)
         assert response.code == expected_response.code
         assert response.body == expected_response.body
 
-    def test_valid_start_post(self):
-        data = json.dumps({"experiment_id": 1234, "key": "key",
-                          "nodes": ['node1', 'node2']})
-        expected_response = Response(200, b'')
-        self._check_request(data, expected_response)
+    def test_valid_token_request(self):
+        expected_response = Response(200,
+                                     json.dumps({'token': 'token'}).encode())
+        self._check_request(expected_response)
 
-    def test_valid_stop_post(self):
-        data = json.dumps({"experiment_id": 1234})
-        expected_response = Response(200, b'')
-        self._check_request(data, expected_response, path='/experiment/stop')
+    def test_invalid_experiment_id(self):
+        path = '/experiments//token'
+        expected_response = Response(400, b'Invalid experiment id')
+        self._check_request(expected_response, path=path)
 
-    def test_invalid_url(self):
-        response = self.fetch('/invalid', method="POST",
+
+class TestHttpAuthHandlerInvalidTokenApp(tornado.testing.AsyncHTTPTestCase):
+
+    def get_app(self):
+        return WebApplication(DEFAULT_AUTH_URL)
+
+    def test_invalid_token_request(self):
+        expected_response = Response(400, b'No internal token set')
+        response = self.fetch('/experiments/123/token', method="GET",
                               headers={"Content-Type": "application/json"})
-        assert response.code != 200
-
-    def test_invalid_start_contents(self):
-        data = json.dumps({"experiment_id": 1234, "key": "key"})
-        expected_response = Response(400, b'Invalid content type')
-        self._check_request(data, expected_response, headers="")
-
-        expected_response = Response(400, b'No json in request body')
-        self._check_request("No json", expected_response)
-
-        invalid_data = json.dumps({"experiment_id": 1234})
-        expected_response = Response(400, b'nodes list is missing')
-        self._check_request(invalid_data, expected_response)
-
-        invalid_data = json.dumps({"experiment_id": 1234, "nodes": ['1', '2']})
-        expected_response = Response(400, b'key is missing')
-        self._check_request(invalid_data, expected_response)
-
-        invalid_data = json.dumps({"key": "key"})
-        expected_response = Response(400, b'experiment_id is missing')
-        self._check_request(invalid_data, expected_response)
-
-        invalid_data = json.dumps({"nodes": ['1', '2']})
-        expected_response = Response(400, b'experiment_id is missing')
-        self._check_request(invalid_data, expected_response)
-
-    def test_invalid_stop_contents(self):
-        stop_path = '/experiment/stop'
-        invalid_data = json.dumps({"experiment": 1234})
-        expected_response = Response(400, b'experiment_id is missing')
-        self._check_request(invalid_data, expected_response, path=stop_path)
+        assert response.code == expected_response.code
+        assert response.body == expected_response.body
