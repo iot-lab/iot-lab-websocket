@@ -16,20 +16,14 @@ Install using pip:
 
 ## How to use
 
-- Start the application from the command line:
+- Start the websocket application from the command line:
 
   ```shell
-  iotlabwebserial-application --debug --port 8000
-  ```
-
-- For a given node, set the key required to access its serial port:
-
-  ```shell
-  curl --header "Content-Type: application/json" --request POST --data '{"experiment_id":123,"nodes":["localhost"],"key":"key"}' http://localhost:8000/experiment/start
+  iotlab-websocket-service --debug --port 8000
   ```
 
 - Start the websocket client:
 
   ```shell
-  iotlabwebserial- --host localhost --port 8000 --key key
+  iotlab-websocket-client --host localhost --port 8000 --token token --id 123
   ```

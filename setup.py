@@ -2,7 +2,7 @@ import os
 from os.path import join as pjoin
 from setuptools import setup, find_packages
 
-PACKAGE = 'iotlabwebserial'
+PACKAGE = 'iotlabwebtools'
 
 
 def readme(fname):
@@ -34,8 +34,14 @@ if __name__ == '__main__':
           keywords="iot websocket serial web",
           platforms='any',
           packages=find_packages(),
-          scripts=[pjoin('bin', 'iotlabwebserial-service'),
-                   pjoin('bin', 'iotlabwebserial-client')],
+          scripts=[],
+          entry_points={
+              'console_scripts': [
+                  'iotlab-websocket-client = '
+                  'iotlabwebtools.websocket_cli:main',
+                  'iotlab-websocket-service = iotlabwebtools.service_cli:main',
+              ],
+          },
           install_requires=[
             'tornado>=5.0',
           ],

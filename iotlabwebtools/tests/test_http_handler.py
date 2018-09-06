@@ -1,4 +1,4 @@
-"""iotlabwebserial http handler tests."""
+"""iotlabwebtools http handler tests."""
 
 import json
 import logging
@@ -6,7 +6,7 @@ from collections import namedtuple
 
 import tornado.testing
 
-from iotlabwebserial.web_application import WebApplication
+from iotlabwebtools.web_application import WebApplication
 
 Response = namedtuple("Response", ["code", "body"])
 
@@ -14,7 +14,7 @@ LOGGER = logging.getLogger("iotlabwebserial")
 LOGGER.setLevel(logging.DEBUG)
 
 
-class TestHttpHandlerApp(tornado.testing.AsyncHTTPTestCase):
+class TestHttpAuthHandlerApp(tornado.testing.AsyncHTTPTestCase):
 
     def get_app(self):
         return WebApplication(['localhost'])

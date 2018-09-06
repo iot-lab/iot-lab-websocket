@@ -5,45 +5,49 @@ import logging
 
 import tornado
 from tornado import gen
+from tornado.iostream import StreamClosedError
 from tornado.websocket import websocket_connect, WebSocketClosedError
+from tornado.httpclient import HTTPClientError
 
-LOGGER = logging.getLogger("websocketclient")
+LOGGER = logging.getLogger("iotlabwebtools")
 
 
 class WebsocketClient(object):
     # pylint:disable=too-few-public-methods
     """Class that connects to a websocket server while listening to stdin."""
 
-    def __init__(self, url, key, debug=False):
+    def __init__(self, url, token, debug=False):
         if debug:
             LOGGER.setLevel(logging.DEBUG)
         self.url = url
-        self.key = key
+        self.token = token
         self.websocket = None
 
     @gen.coroutine
     def _connect(self):
         try:
-            self.websocket = yield websocket_connect(self.url)
-        except WebSocketClosedError:
-            LOGGER.error("Websocket connection failed.")
+            self.websocket = yield websocket_connect(
+                self.url, subprotocols=['auth_token', self.token])
+        except (ConnectionRefusedError, HTTPClientError) as exc:
+            LOGGER.error("Websocket connection failed: %s", exc)
             return
-
         LOGGER.debug("Websocket connection opened.")
-        # Send the authentication key once connected
-        self.websocket.write_message(self.key)
 
     @gen.coroutine
     def _listen_websocket(self):
         while True:
-            data = yield self.websocket.read_message()
-            if data is None:
-                LOGGER.debug("Websocket connection closed.")
-                tornado.ioloop.IOLoop.current().stop()
+            try:
+                data = yield self.websocket.read_message()
+                if data is None:
+                    LOGGER.debug("Websocket connection closed.")
+                    tornado.ioloop.IOLoop.current().stop()
+                    return
+                # Print received data to stdout
+                sys.stdout.write(data)
+                sys.stdout.flush()
+            except (WebSocketClosedError, StreamClosedError) as exc:
+                LOGGER.error("Websocket connection failed: %s", exc)
                 return
-            # Print received data to stdout
-            sys.stdout.write(data)
-            sys.stdout.flush()
 
     def _listen_stdin(self):
         LOGGER.debug("Start listening to stdin")
