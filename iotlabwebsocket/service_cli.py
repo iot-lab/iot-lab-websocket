@@ -11,7 +11,7 @@ from .parser import service_cli_parser
 
 logging.basicConfig(format='%(asctime)-15s %(levelname)-7s '
                            '%(filename)20s:%(lineno)-3d %(message)s')
-LOGGER = logging.getLogger("iotlabwebtools")
+LOGGER = logging.getLogger("iotlabwebsocket")
 LOGGER.setLevel(logging.INFO)
 
 

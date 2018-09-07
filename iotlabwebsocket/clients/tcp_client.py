@@ -6,7 +6,7 @@ import logging
 from tornado import gen, tcpclient
 from tornado.iostream import StreamClosedError
 
-LOGGER = logging.getLogger("iotlabwebtools")
+LOGGER = logging.getLogger("iotlabwebsocket")
 
 NODE_TCP_PORT = 20000
 

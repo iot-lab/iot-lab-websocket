@@ -1,1 +1,0 @@
-"""iotlabwebtools handlers module."""

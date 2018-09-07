@@ -10,7 +10,7 @@ from .parser import websocket_cli_parser
 
 logging.basicConfig(format='%(asctime)-15s %(filename)s:%(lineno)d '
                            '%(levelname)-5s %(message)s')
-LOGGER = logging.getLogger("iotlabwebtools")
+LOGGER = logging.getLogger("iotlabwebsocket")
 
 
 def main(args=None):

@@ -9,7 +9,7 @@ from .clients.tcp_client import TCPClient
 from .handlers.http_handler import HttpAuthRequestHandler
 from .handlers.websocket_handler import WebsocketClientHandler
 
-LOGGER = logging.getLogger("iotlabwebtools")
+LOGGER = logging.getLogger("iotlabwebsocket")
 
 DEFAULT_AUTH_URL = "http://localhost:8000/experiments"
 

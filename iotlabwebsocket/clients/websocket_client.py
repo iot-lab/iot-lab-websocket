@@ -9,7 +9,7 @@ from tornado.iostream import StreamClosedError
 from tornado.websocket import websocket_connect, WebSocketClosedError
 from tornado.httpclient import HTTPClientError
 
-LOGGER = logging.getLogger("iotlabwebtools")
+LOGGER = logging.getLogger("iotlabwebsocket")
 
 
 class WebsocketClient(object):

@@ -2,7 +2,7 @@ import os
 from os.path import join as pjoin
 from setuptools import setup, find_packages
 
-PACKAGE = 'iotlabwebtools'
+PACKAGE = 'iotlabwebsocket'
 
 
 def readme(fname):
@@ -38,8 +38,9 @@ if __name__ == '__main__':
           entry_points={
               'console_scripts': [
                   'iotlab-websocket-client = '
-                  'iotlabwebtools.websocket_cli:main',
-                  'iotlab-websocket-service = iotlabwebtools.service_cli:main',
+                  'iotlabwebsocket.client_cli:main',
+                  'iotlab-websocket-service = '
+                  'iotlabwebsocket.service_cli:main',
               ],
           },
           install_requires=[

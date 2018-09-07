@@ -1,4 +1,4 @@
-"""iotlabwebtools http handler tests."""
+"""iotlabwebsocket http handler tests."""
 
 import json
 import logging
@@ -6,11 +6,11 @@ from collections import namedtuple
 
 import tornado.testing
 
-from iotlabwebtools.web_application import WebApplication, DEFAULT_AUTH_URL
+from iotlabwebsocket.web_application import WebApplication, DEFAULT_AUTH_URL
 
 Response = namedtuple("Response", ["code", "body"])
 
-LOGGER = logging.getLogger("iotlabwebserial")
+LOGGER = logging.getLogger("iotlabwebsocket")
 LOGGER.setLevel(logging.DEBUG)
 
 

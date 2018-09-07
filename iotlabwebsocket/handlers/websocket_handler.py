@@ -6,7 +6,7 @@ import logging
 from tornado import websocket, gen
 from tornado.httpclient import AsyncHTTPClient, HTTPRequest, HTTPError
 
-LOGGER = logging.getLogger("iotlabwebtools")
+LOGGER = logging.getLogger("iotlabwebsocket")
 
 
 class WebsocketClientHandler(websocket.WebSocketHandler):

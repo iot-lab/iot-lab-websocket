@@ -5,7 +5,7 @@ import logging
 
 from tornado import web
 
-LOGGER = logging.getLogger("iotlabwebtools")
+LOGGER = logging.getLogger("iotlabwebsocket")
 
 
 class HttpAuthRequestHandler(web.RequestHandler):

@@ -1,4 +1,4 @@
-"""iotlabwebtools tcp client tests."""
+"""iotlabwebsocket tcp client tests."""
 
 import sys
 import logging
@@ -12,9 +12,9 @@ from tornado import gen
 
 from tornado.testing import AsyncTestCase, gen_test, bind_unused_port
 
-from iotlabwebtools.clients.tcp_client import TCPClient, NODE_TCP_PORT
+from iotlabwebsocket.clients.tcp_client import TCPClient, NODE_TCP_PORT
 
-LOGGER = logging.getLogger("iotlabwebserial")
+LOGGER = logging.getLogger("iotlabwebsocket")
 LOGGER.setLevel(logging.DEBUG)
 
 

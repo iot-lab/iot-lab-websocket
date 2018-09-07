@@ -1,4 +1,4 @@
-"""iotlabwebtools service cli tests."""
+"""iotlabwebsocket service cli tests."""
 
 import sys
 import argparse
@@ -7,15 +7,15 @@ import unittest
 
 import mock
 
-from iotlabwebtools.service_cli import main
-from iotlabwebtools.web_application import WebApplication, DEFAULT_AUTH_URL
+from iotlabwebsocket.service_cli import main
+from iotlabwebsocket.web_application import WebApplication, DEFAULT_AUTH_URL
 
-LOGGER = logging.getLogger("iotlabwebtools")
+LOGGER = logging.getLogger("iotlabwebsocket")
 
 
-@mock.patch('iotlabwebtools.web_application.WebApplication.stop')
-@mock.patch('iotlabwebtools.web_application.WebApplication.listen')
-@mock.patch('iotlabwebtools.web_application.WebApplication.__init__')
+@mock.patch('iotlabwebsocket.web_application.WebApplication.stop')
+@mock.patch('iotlabwebsocket.web_application.WebApplication.listen')
+@mock.patch('iotlabwebsocket.web_application.WebApplication.__init__')
 @mock.patch('tornado.ioloop.IOLoop.current')
 class ServiceCliTest(unittest.TestCase):
 
