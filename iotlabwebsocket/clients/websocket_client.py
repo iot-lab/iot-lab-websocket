@@ -16,9 +16,7 @@ class WebsocketClient(object):
     # pylint:disable=too-few-public-methods
     """Class that connects to a websocket server while listening to stdin."""
 
-    def __init__(self, url, token, debug=False):
-        if debug:
-            LOGGER.setLevel(logging.DEBUG)
+    def __init__(self, url, token):
         self.url = url
         self.token = token
         self.websocket = None

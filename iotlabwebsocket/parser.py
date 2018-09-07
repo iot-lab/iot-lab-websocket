@@ -25,7 +25,7 @@ def service_cli_parser():
     return parser
 
 
-def websocket_cli_parser():
+def client_cli_parser():
     """Return the cli parser of the websocket client."""
     parser = common_parser("Websocket client")
     parser.add_argument('--host', type=str, default="localhost",
