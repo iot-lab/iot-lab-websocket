@@ -20,12 +20,13 @@ class WebApplication(tornado.web.Application):
     def __init__(self, auth_url, token=''):
         settings = {'debug': True}
         handlers = [
-            (r"/ws/.*/.*", WebsocketClientHandler, dict(auth_url=auth_url))
+            (r"/ws/[0-9]+/.*/serial", WebsocketClientHandler,
+             dict(auth_url=auth_url))
         ]
 
         if auth_url == DEFAULT_AUTH_URL:
-            handlers.append((r"/experiments/.*/token", HttpAuthRequestHandler,
-                             dict(token=token)))
+            handlers.append((r"/experiments/[0-9]+/token",
+                             HttpAuthRequestHandler, dict(token=token)))
 
         self.tcp_clients = defaultdict(TCPClient)
         self.websockets = defaultdict(list)

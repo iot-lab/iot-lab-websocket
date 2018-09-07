@@ -31,9 +31,11 @@ class TestHttpAuthHandlerApp(tornado.testing.AsyncHTTPTestCase):
         self._check_request(expected_response)
 
     def test_invalid_experiment_id(self):
-        path = '/experiments//token'
-        expected_response = Response(400, b'Invalid experiment id')
-        self._check_request(expected_response, path=path)
+        for path in ['/experiments/abc/token', '/experiments//token']:
+            path = '/experiments/abc/token'
+            response = self.fetch(path, method="GET",
+                                  headers={"Content-Type": "application/json"})
+            assert response.code == 404
 
 
 class TestHttpAuthHandlerInvalidTokenApp(tornado.testing.AsyncHTTPTestCase):

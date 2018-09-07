@@ -20,8 +20,8 @@ def main(args=None):
         LOGGER.setLevel(logging.DEBUG)
 
     try:
-        url = "ws://{}:{}/ws/{}/{}".format(
-            args.host, args.port, args.id, args.node)
+        url = "ws://{}:{}/ws/{}/{}/{}".format(
+            args.host, args.port, args.id, args.node, args.type)
         ws_client = WebsocketClient(url, args.token)
         ws_client.run()
         tornado.ioloop.IOLoop.current().start()

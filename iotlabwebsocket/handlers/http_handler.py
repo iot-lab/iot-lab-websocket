@@ -21,9 +21,6 @@ class HttpAuthRequestHandler(web.RequestHandler):
         experiment_id = self.request.path.split('/')[-2]
 
         msg = None
-        if not experiment_id:
-            msg = "Invalid experiment id"
-
         if not self.token:
             msg = "No internal token set"
 

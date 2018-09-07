@@ -12,7 +12,7 @@ from iotlabwebsocket.clients.websocket_client import WebsocketClient
 
 LOGGER = logging.getLogger("iotlabwebsocket")
 
-URL = "ws://{}:{}/ws/{}/{}"
+URL = "ws://{}:{}/ws/{}/{}/serial"
 
 
 @mock.patch('iotlabwebsocket.clients.websocket_client.WebsocketClient.run')

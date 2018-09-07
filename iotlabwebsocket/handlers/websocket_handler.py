@@ -17,13 +17,9 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
     def _check_path(self):
         # Check path is correct
         path = self.request.path
-        path_elements = path.split('/')
+        self.experiment_id, self.node = path.split('/')[-3:-1]
         msg = None
-        if len(path_elements) != 4:
-            msg = "invalid url {}".format(path)
-
-        experiment_id, node = path_elements[-2:]
-        if not experiment_id or not node:
+        if not self.experiment_id or not self.node:
             msg = "invalid url: {}".format(path)
 
         if msg is not None:
@@ -31,8 +27,6 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
             self.set_status(404)  # Not found
             self.finish(msg)
             return False
-
-        self.experiment_id, self.node = path_elements[-2:]
         return True
 
     @gen.coroutine

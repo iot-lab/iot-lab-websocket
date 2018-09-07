@@ -36,4 +36,8 @@ def client_cli_parser():
                         help="node hostname")
     parser.add_argument('--id', type=str, default="",
                         help="experiment id associated to node")
+    parser.add_argument('--type', default="serial", nargs='?',
+                        choices=['serial'],
+                        help="the type of connection (only serial supported "
+                             "for the moment)")
     return parser
