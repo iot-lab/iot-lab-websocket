@@ -14,7 +14,8 @@ def main(args=None):
     args = service_cli_parser().parse_args(args)
     if args.debug:
         LOGGER.setLevel(logging.DEBUG)
-    app = WebApplication(args.auth_host, args.auth_port, token=args.token)
+    app = WebApplication(args.auth_host, args.auth_port,
+                         use_local_auth=args.use_local_auth, token=args.token)
     try:
         app.listen(args.port)
         LOGGER.info('Application started, listening on port %s', args.port)

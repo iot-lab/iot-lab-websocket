@@ -14,7 +14,8 @@ Response = namedtuple("Response", ["code", "body"])
 class TestHttpAuthHandlerApp(tornado.testing.AsyncHTTPTestCase):
 
     def get_app(self):
-        return WebApplication(DEFAULT_AUTH_HOST, DEFAULT_AUTH_PORT, 'token')
+        return WebApplication(DEFAULT_AUTH_HOST, DEFAULT_AUTH_PORT,
+                              use_local_auth=True, token='token')
 
     def _check_request(self, expected_response, path='/experiments/123/token',
                        headers={"Content-Type": "application/json"}):
@@ -38,7 +39,8 @@ class TestHttpAuthHandlerApp(tornado.testing.AsyncHTTPTestCase):
 class TestHttpAuthHandlerInvalidTokenApp(tornado.testing.AsyncHTTPTestCase):
 
     def get_app(self):
-        return WebApplication(DEFAULT_AUTH_HOST, DEFAULT_AUTH_PORT)
+        return WebApplication(DEFAULT_AUTH_HOST, DEFAULT_AUTH_PORT,
+                              use_local_auth=True)
 
     def test_invalid_token_request(self):
         expected_response = Response(400, b'No internal token set')

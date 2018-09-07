@@ -25,7 +25,8 @@ class ServiceCliTest(unittest.TestCase):
         main(args)
 
         ioloop.assert_called_once()  # for the start
-        init.assert_called_with(DEFAULT_AUTH_HOST, DEFAULT_AUTH_PORT, token='')
+        init.assert_called_with(DEFAULT_AUTH_HOST, DEFAULT_AUTH_PORT,
+                                use_local_auth=False, token='')
         listen.assert_called_with('8000')
 
     def test_main_service_cli_args(self, ioloop, init, listen, stop_app):
@@ -35,12 +36,12 @@ class ServiceCliTest(unittest.TestCase):
         port_test = '8082'
         token_test = 'test_token'
         args = ['--auth-host', auth_host_test, '--auth-port', auth_port_test,
-                '--token', token_test, '--port', port_test]
+                '--use-local-auth', '--token', token_test, '--port', port_test]
         main(args)
 
         ioloop.assert_called_once()  # for the start
         init.assert_called_with(auth_host_test, auth_port_test,
-                                token=token_test)
+                                use_local_auth=True, token=token_test)
         listen.assert_called_with(port_test)
 
     def test_main_service_debug(self, ioloop, init, listen, stop_app):

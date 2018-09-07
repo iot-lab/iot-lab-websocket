@@ -4,7 +4,7 @@ from collections import defaultdict
 
 import tornado
 
-from .common import LOGGER, DEFAULT_AUTH_HOST, DEFAULT_AUTH_PORT
+from .common import LOGGER, DEFAULT_AUTH_HOST
 from .clients.tcp_client import TCPClient
 from .handlers.http_handler import HttpAuthRequestHandler
 from .handlers.websocket_handler import WebsocketClientHandler
@@ -15,7 +15,7 @@ AUTH_URL = "http://{}:{}/experiments"
 class WebApplication(tornado.web.Application):
     """IoT-LAB websocket to tcp redirector."""
 
-    def __init__(self, auth_host, auth_port, token=''):
+    def __init__(self, auth_host, auth_port, use_local_auth=False, token=''):
         auth_url = AUTH_URL.format(auth_host, auth_port)
         settings = {'debug': True}
         handlers = [
@@ -23,7 +23,7 @@ class WebApplication(tornado.web.Application):
              dict(auth_url=auth_url))
         ]
 
-        if auth_host == DEFAULT_AUTH_HOST and auth_port == DEFAULT_AUTH_PORT:
+        if auth_host == DEFAULT_AUTH_HOST and use_local_auth:
             handlers.append((r"/experiments/[0-9]+/token",
                              HttpAuthRequestHandler, dict(token=token)))
 

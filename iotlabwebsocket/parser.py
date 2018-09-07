@@ -27,6 +27,9 @@ def service_cli_parser():
                         help="token authentication http host")
     parser.add_argument('--auth-port', type=str, default=DEFAULT_AUTH_PORT,
                         help="token authentication http port")
+    parser.add_argument('--use-local-auth', action='store_true',
+                        help="Start the application http authentication"
+                             "handler.")
     return parser
 
 
