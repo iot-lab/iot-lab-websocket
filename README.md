@@ -1,4 +1,4 @@
-# IoT-LAB web_serial_redirection
+# IoT-LAB websocket tools
 
 This application provides a redirection mecanism between the TCP server
 connected to the serial port of an IoT-LAB node to websockets clients.
