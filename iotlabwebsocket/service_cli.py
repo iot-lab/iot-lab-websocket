@@ -1,8 +1,6 @@
 """iotlabwebserial application command line interface"""
 
-import signal
 import logging
-from functools import partial
 
 import tornado
 
