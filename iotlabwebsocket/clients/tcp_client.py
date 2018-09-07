@@ -1,12 +1,11 @@
 """Management of the TCP connection to a node."""
 
 import socket
-import logging
 
 from tornado import gen, tcpclient
 from tornado.iostream import StreamClosedError
 
-LOGGER = logging.getLogger("iotlabwebsocket")
+from ..common import LOGGER
 
 NODE_TCP_PORT = 20000
 

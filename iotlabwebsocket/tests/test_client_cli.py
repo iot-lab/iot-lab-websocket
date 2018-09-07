@@ -7,12 +7,11 @@ import unittest
 
 import mock
 
+from iotlabwebsocket.common import LOGGER
 from iotlabwebsocket.client_cli import main
 from iotlabwebsocket.clients.websocket_client import WebsocketClient
 
-LOGGER = logging.getLogger("iotlabwebsocket")
-
-URL = "ws://{}:{}/ws/{}/{}/serial"
+URL = "{}://{}:{}/ws/{}/{}/serial"
 
 
 @mock.patch('iotlabwebsocket.clients.websocket_client.WebsocketClient.run')
@@ -26,10 +25,11 @@ class ClientCliTest(unittest.TestCase):
         args = []
         main(args)
 
-        default_url = URL.format('localhost', '8000', '', 'localhost')
+        default_url = URL.format('wss', 'localhost', '8000', '', 'localhost')
 
         init.assert_called_with(default_url, '')
         run.assert_called_once()
+        ioloop.assert_called_once()  # for the start
 
     def test_main_client_cli_args(self, ioloop, init, run):
         init.return_value = None
@@ -38,17 +38,39 @@ class ClientCliTest(unittest.TestCase):
         exp_id = '123'
         node = 'node-42'
         token_test = 'test_token'
-        args = ['--host', host, '--port', port, '--node', node, '--id', exp_id,
-                '--token', token_test]
+        args = ['--host', host, '--port', port, '--node', node,
+                '--exp-id', exp_id, '--token', token_test]
         main(args)
 
-        expected_url = URL.format(host, port, exp_id, node)
+        expected_url = URL.format('wss', host, port, exp_id, node)
         init.assert_called_with(expected_url, token_test)
         run.assert_called_once()
+        ioloop.assert_called_once()  # for the start
+
+    def test_main_client_incure(self, ioloop, init, run):
+        init.return_value = None
+        args = ['--insecure']
+        main(args)
+
+        insecure_url = URL.format('ws', 'localhost', '8000', '', 'localhost')
+
+        init.assert_called_with(insecure_url, '')
+        run.assert_called_once()
+        ioloop.assert_called_once()  # for the start
 
     def test_main_client_debug(self, ioloop, init, run):
         init.return_value = None
         args = ['--debug']
         main(args)
 
+        ioloop.assert_called_once()  # for the start
+
         assert LOGGER.getEffectiveLevel() == logging.DEBUG
+
+    def test_main_client_exit(self, ioloop, init, run):
+        init.return_value = None
+        run.side_effect = KeyboardInterrupt
+        args = []
+        main(args)
+
+        ioloop.assert_called_once()  # for the stop

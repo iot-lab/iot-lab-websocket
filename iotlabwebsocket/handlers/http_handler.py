@@ -1,11 +1,10 @@
 """iotlabwebserial HTTP request handler."""
 
 import json
-import logging
 
 from tornado import web
 
-LOGGER = logging.getLogger("iotlabwebsocket")
+from ..common import LOGGER
 
 
 class HttpAuthRequestHandler(web.RequestHandler):

@@ -1,12 +1,12 @@
 """iotlabwebsocket http handler tests."""
 
 import json
-import logging
 from collections import namedtuple
 
 import tornado.testing
 
-from iotlabwebsocket.web_application import WebApplication, DEFAULT_AUTH_URL
+from iotlabwebsocket.common import LOGGER, DEFAULT_AUTH_HOST, DEFAULT_AUTH_PORT
+from iotlabwebsocket.web_application import WebApplication
 
 Response = namedtuple("Response", ["code", "body"])
 
@@ -14,7 +14,7 @@ Response = namedtuple("Response", ["code", "body"])
 class TestHttpAuthHandlerApp(tornado.testing.AsyncHTTPTestCase):
 
     def get_app(self):
-        return WebApplication(DEFAULT_AUTH_URL, 'token')
+        return WebApplication(DEFAULT_AUTH_HOST, DEFAULT_AUTH_PORT, 'token')
 
     def _check_request(self, expected_response, path='/experiments/123/token',
                        headers={"Content-Type": "application/json"}):
@@ -38,7 +38,7 @@ class TestHttpAuthHandlerApp(tornado.testing.AsyncHTTPTestCase):
 class TestHttpAuthHandlerInvalidTokenApp(tornado.testing.AsyncHTTPTestCase):
 
     def get_app(self):
-        return WebApplication(DEFAULT_AUTH_URL)
+        return WebApplication(DEFAULT_AUTH_HOST, DEFAULT_AUTH_PORT)
 
     def test_invalid_token_request(self):
         expected_response = Response(400, b'No internal token set')

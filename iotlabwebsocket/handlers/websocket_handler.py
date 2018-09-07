@@ -1,12 +1,11 @@
 """iotlabwebserial websocket connections handler."""
 
 import json
-import logging
 
 from tornado import websocket, gen
 from tornado.httpclient import AsyncHTTPClient, HTTPRequest, HTTPError
 
-LOGGER = logging.getLogger("iotlabwebsocket")
+from ..common import LOGGER
 
 
 class WebsocketClientHandler(websocket.WebSocketHandler):

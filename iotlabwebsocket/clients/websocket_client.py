@@ -1,7 +1,6 @@
 """Websocket client"""
 
 import sys
-import logging
 
 import tornado
 from tornado import gen
@@ -9,7 +8,7 @@ from tornado.iostream import StreamClosedError
 from tornado.websocket import websocket_connect, WebSocketClosedError
 from tornado.httpclient import HTTPClientError
 
-LOGGER = logging.getLogger("iotlabwebsocket")
+from ..common import LOGGER
 
 
 class WebsocketClient(object):

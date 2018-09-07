@@ -7,10 +7,10 @@ import unittest
 
 import mock
 
+from iotlabwebsocket.common import (DEFAULT_AUTH_HOST, DEFAULT_AUTH_PORT,
+                                    LOGGER)
 from iotlabwebsocket.service_cli import main
-from iotlabwebsocket.web_application import WebApplication, DEFAULT_AUTH_URL
-
-LOGGER = logging.getLogger("iotlabwebsocket")
+from iotlabwebsocket.web_application import WebApplication, AUTH_URL
 
 
 @mock.patch('iotlabwebsocket.web_application.WebApplication.stop')
@@ -24,26 +24,37 @@ class ServiceCliTest(unittest.TestCase):
         args = []
         main(args)
 
-        # start.assert_called_once()
-        init.assert_called_with(auth_url=DEFAULT_AUTH_URL, token='')
+        ioloop.assert_called_once()  # for the start
+        init.assert_called_with(DEFAULT_AUTH_HOST, DEFAULT_AUTH_PORT, token='')
         listen.assert_called_with('8000')
 
     def test_main_service_cli_args(self, ioloop, init, listen, stop_app):
         init.return_value = None
-        auth_url_test = 'http://testhost/test'
+        auth_host_test = 'testhost'
+        auth_port_test = '8080'
         port_test = '8082'
         token_test = 'test_token'
-        args = ['--auth-url', auth_url_test, '--token', token_test,
-                '--port', port_test]
+        args = ['--auth-host', auth_host_test, '--auth-port', auth_port_test,
+                '--token', token_test, '--port', port_test]
         main(args)
 
-        # start.assert_called_once()
-        init.assert_called_with(auth_url=auth_url_test, token=token_test)
+        ioloop.assert_called_once()  # for the start
+        init.assert_called_with(auth_host_test, auth_port_test,
+                                token=token_test)
         listen.assert_called_with(port_test)
 
-    def test_main_debug(self, ioloop, init, listen, stop_app):
+    def test_main_service_debug(self, ioloop, init, listen, stop_app):
         init.return_value = None
         args = ['--debug']
         main(args)
 
+        ioloop.assert_called_once()  # for the start
         assert LOGGER.getEffectiveLevel() == logging.DEBUG
+
+    def test_main_service_exit(self, ioloop, init, listen, stop_app):
+        init.return_value = None
+        listen.side_effect = KeyboardInterrupt
+        args = []
+        main(args)
+
+        ioloop.assert_called_once()  # for the stop

@@ -1,7 +1,6 @@
 """iotlabwebsocket tcp client tests."""
 
 import sys
-import logging
 import unittest
 
 import mock

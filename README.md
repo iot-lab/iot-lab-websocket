@@ -25,5 +25,5 @@ Install using pip:
 - Start the websocket client:
 
   ```shell
-  iotlab-websocket-client --host localhost --port 8000 --token token --id 123
+  iotlab-websocket-client --host localhost --port 8000 --token token --exp-id 123
   ```
