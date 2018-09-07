@@ -44,7 +44,7 @@ if __name__ == '__main__':
               ],
           },
           install_requires=[
-            'tornado>=5.0',
+            'tornado>=5.1',
           ],
           classifiers=[
             'Development Status :: 4 - Beta',
