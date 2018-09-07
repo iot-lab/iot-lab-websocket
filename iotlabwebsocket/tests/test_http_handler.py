@@ -10,9 +10,6 @@ from iotlabwebsocket.web_application import WebApplication, DEFAULT_AUTH_URL
 
 Response = namedtuple("Response", ["code", "body"])
 
-LOGGER = logging.getLogger("iotlabwebsocket")
-LOGGER.setLevel(logging.DEBUG)
-
 
 class TestHttpAuthHandlerApp(tornado.testing.AsyncHTTPTestCase):
 
