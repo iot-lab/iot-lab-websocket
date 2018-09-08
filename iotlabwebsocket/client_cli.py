@@ -4,7 +4,8 @@ import logging
 
 import tornado
 
-from .common import LOGGER
+from .logger import setup_client_logger
+from .logger import CLIENT_LOGGER as LOGGER
 from .clients.websocket_client import WebsocketClient
 from .parser import client_cli_parser
 
@@ -12,9 +13,9 @@ from .parser import client_cli_parser
 def main(args=None):
     """Main function of the websocket client cli."""
     args = client_cli_parser().parse_args(args)
-    if args.debug:
-        LOGGER.setLevel(logging.DEBUG)
-
+    if not args.debug:
+        LOGGER.setLevel(logging.ERROR)
+    setup_client_logger()
     try:
         protocol = 'wss'
         if args.insecure:
@@ -25,5 +26,5 @@ def main(args=None):
         ws_client.run()
         tornado.ioloop.IOLoop.current().start()
     except KeyboardInterrupt:
-        LOGGER.info("Exiting")
+        LOGGER.debug("Exiting")
         tornado.ioloop.IOLoop.current().stop()

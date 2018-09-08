@@ -8,7 +8,7 @@ from tornado.iostream import StreamClosedError
 from tornado.websocket import websocket_connect, WebSocketClosedError
 from tornado.httpclient import HTTPClientError
 
-from ..common import LOGGER
+from ..logger import CLIENT_LOGGER as LOGGER
 
 
 class WebsocketClient(object):

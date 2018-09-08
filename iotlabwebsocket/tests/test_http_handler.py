@@ -5,7 +5,8 @@ from collections import namedtuple
 
 import tornado.testing
 
-from iotlabwebsocket.common import LOGGER, DEFAULT_AUTH_HOST, DEFAULT_AUTH_PORT
+from iotlabwebsocket import DEFAULT_AUTH_HOST, DEFAULT_AUTH_PORT
+from iotlabwebsocket.logger import LOGGER
 from iotlabwebsocket.web_application import WebApplication
 
 Response = namedtuple("Response", ["code", "body"])

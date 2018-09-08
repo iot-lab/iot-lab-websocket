@@ -5,7 +5,7 @@ import json
 from tornado import websocket, gen
 from tornado.httpclient import AsyncHTTPClient, HTTPRequest, HTTPError
 
-from ..common import LOGGER
+from ..logger import LOGGER
 
 
 class WebsocketClientHandler(websocket.WebSocketHandler):

@@ -4,7 +4,7 @@ import json
 
 from tornado import web
 
-from ..common import LOGGER
+from ..logger import LOGGER
 
 
 class HttpAuthRequestHandler(web.RequestHandler):

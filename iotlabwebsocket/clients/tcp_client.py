@@ -5,7 +5,7 @@ import socket
 from tornado import gen, tcpclient
 from tornado.iostream import StreamClosedError
 
-from ..common import LOGGER
+from ..logger import LOGGER
 
 NODE_TCP_PORT = 20000
 

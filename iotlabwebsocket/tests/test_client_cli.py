@@ -7,7 +7,7 @@ import unittest
 
 import mock
 
-from iotlabwebsocket.common import LOGGER
+from iotlabwebsocket.logger import CLIENT_LOGGER
 from iotlabwebsocket.client_cli import main
 from iotlabwebsocket.clients.websocket_client import WebsocketClient
 
@@ -46,6 +46,7 @@ class ClientCliTest(unittest.TestCase):
         init.assert_called_with(expected_url, token_test)
         run.assert_called_once()
         ioloop.assert_called_once()  # for the start
+        assert CLIENT_LOGGER.getEffectiveLevel() == logging.ERROR
 
     def test_main_client_incure(self, ioloop, init, run):
         init.return_value = None
@@ -57,15 +58,16 @@ class ClientCliTest(unittest.TestCase):
         init.assert_called_with(insecure_url, '')
         run.assert_called_once()
         ioloop.assert_called_once()  # for the start
+        assert CLIENT_LOGGER.getEffectiveLevel() == logging.ERROR
 
-    def test_main_client_debug(self, ioloop, init, run):
+    @mock.patch('iotlabwebsocket.client_cli.setup_client_logger')
+    def test_main_client_logger(self, setup_logger, ioloop, init, run):
         init.return_value = None
         args = ['--debug']
         main(args)
 
         ioloop.assert_called_once()  # for the start
-
-        assert LOGGER.getEffectiveLevel() == logging.DEBUG
+        setup_logger.assert_called_once()
 
     def test_main_client_exit(self, ioloop, init, run):
         init.return_value = None

@@ -2,9 +2,8 @@
 
 import argparse
 
-from .common import (DEFAULT_APPLICATION_HOST, DEFAULT_APPLICATION_PORT,
-                     DEFAULT_AUTH_HOST, DEFAULT_AUTH_PORT,
-                     DEFAULT_NODE_HOST)
+from . import (DEFAULT_APPLICATION_HOST, DEFAULT_APPLICATION_PORT,
+               DEFAULT_AUTH_HOST, DEFAULT_AUTH_PORT, DEFAULT_NODE_HOST)
 
 
 def common_parser(description):
@@ -15,8 +14,6 @@ def common_parser(description):
     parser.add_argument('--token', type=str, default="",
                         help="token used for websocket authentication (only "
                              "used when localhost is the auth host)")
-    parser.add_argument('--debug', action='store_true',
-                        help="enable debug mode")
     return parser
 
 
@@ -30,6 +27,10 @@ def service_cli_parser():
     parser.add_argument('--use-local-auth', action='store_true',
                         help="Start the application http authentication"
                              "handler.")
+    parser.add_argument('--log-file', type=str, default=None,
+                        help="Absolute path of the log file")
+    parser.add_argument('--log-console', action='store_true',
+                        help="Print debug messages to console.")
     return parser
 
 
@@ -49,4 +50,6 @@ def client_cli_parser():
     parser.add_argument('--insecure', action='store_true',
                         help="connect to websocket host using insecure "
                              "protocol (ws)")
+    parser.add_argument('--debug', action='store_true',
+                        help="enable debug mode")
     return parser

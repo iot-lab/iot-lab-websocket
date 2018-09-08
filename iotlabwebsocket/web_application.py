@@ -4,7 +4,8 @@ from collections import defaultdict
 
 import tornado
 
-from .common import LOGGER, DEFAULT_AUTH_HOST
+from . import DEFAULT_AUTH_HOST
+from .logger import LOGGER
 from .clients.tcp_client import TCPClient
 from .handlers.http_handler import HttpAuthRequestHandler
 from .handlers.websocket_handler import WebsocketClientHandler

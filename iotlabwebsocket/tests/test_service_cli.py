@@ -1,5 +1,6 @@
 """iotlabwebsocket service cli tests."""
 
+import os.path
 import sys
 import argparse
 import logging
@@ -7,8 +8,8 @@ import unittest
 
 import mock
 
-from iotlabwebsocket.common import (DEFAULT_AUTH_HOST, DEFAULT_AUTH_PORT,
-                                    LOGGER)
+from iotlabwebsocket import DEFAULT_AUTH_HOST, DEFAULT_AUTH_PORT
+from iotlabwebsocket.logger import LOGGER
 from iotlabwebsocket.service_cli import main
 from iotlabwebsocket.web_application import WebApplication, AUTH_URL
 
@@ -44,13 +45,17 @@ class ServiceCliTest(unittest.TestCase):
                                 use_local_auth=True, token=token_test)
         listen.assert_called_with(port_test)
 
-    def test_main_service_debug(self, ioloop, init, listen, stop_app):
+    @mock.patch('iotlabwebsocket.service_cli.setup_server_logger')
+    def test_main_service_logging(self, setup_logger, ioloop, init, listen,
+                                  stop_app):
         init.return_value = None
-        args = ['--debug']
+        log_file_test = os.path.join('/tmp/test.log')
+        args = ['--log-file', log_file_test, '--log-console']
         main(args)
 
         ioloop.assert_called_once()  # for the start
-        assert LOGGER.getEffectiveLevel() == logging.DEBUG
+        setup_logger.assert_called_with(log_file=log_file_test,
+                                        log_console=True)
 
     def test_main_service_exit(self, ioloop, init, listen, stop_app):
         init.return_value = None
