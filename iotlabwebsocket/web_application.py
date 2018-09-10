@@ -4,29 +4,27 @@ from collections import defaultdict
 
 import tornado
 
-from . import DEFAULT_AUTH_HOST
+from . import DEFAULT_API_HOST
 from .logger import LOGGER
 from .clients.tcp_client import TCPClient
-from .handlers.http_handler import HttpAuthRequestHandler
+from .handlers.http_handler import HttpApiRequestHandler
 from .handlers.websocket_handler import WebsocketClientHandler
-
-AUTH_URL = "http://{}:{}/experiments"
 
 
 class WebApplication(tornado.web.Application):
     """IoT-LAB websocket to tcp redirector."""
 
-    def __init__(self, auth_host, auth_port, use_local_auth=False, token=''):
-        auth_url = AUTH_URL.format(auth_host, auth_port)
+    def __init__(self, api, use_local_api=False, token=''):
         settings = {'debug': True}
         handlers = [
-            (r"/ws/[0-9]+/.*/serial", WebsocketClientHandler,
-             dict(auth_url=auth_url))
+            (r"/ws/[0-9]+/.*/serial", WebsocketClientHandler, dict(api=api))
         ]
 
-        if auth_host == DEFAULT_AUTH_HOST and use_local_auth:
-            handlers.append((r"/experiments/[0-9]+/token",
-                             HttpAuthRequestHandler, dict(token=token)))
+        if use_local_api:
+            api.protocol = 'http'
+            api.host = DEFAULT_API_HOST
+            handlers.append((r"/api/experiments/[0-9]+/.*",
+                             HttpApiRequestHandler, dict(token=token)))
 
         self.tcp_clients = defaultdict(TCPClient)
         self.websockets = defaultdict(list)

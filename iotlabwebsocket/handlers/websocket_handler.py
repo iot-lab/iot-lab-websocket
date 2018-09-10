@@ -42,7 +42,7 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
 
         # Fetch the token from the authentication server
         http_client = AsyncHTTPClient()
-        request = HTTPRequest("{}/{}/token".format(self.auth_url,
+        request = HTTPRequest("{}/{}/token".format(self.api.url,
                                                    self.experiment_id))
         try:
             response = yield http_client.fetch(request)
@@ -68,9 +68,9 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
 
         raise gen.Return(True)
 
-    def initialize(self, auth_url=""):
-        """Initialize the authentication url where tokens are retrieved."""
-        self.auth_url = auth_url
+    def initialize(self, api):
+        """Initialize the api information."""
+        self.api = api
 
     @gen.coroutine
     def get(self, *args, **kwargs):
