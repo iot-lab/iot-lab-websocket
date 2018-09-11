@@ -16,14 +16,14 @@ Install using pip:
 
 ## How to use
 
-- Start the websocket application from the command line:
+- Start the websocket server from the command line:
 
   ```shell
-  iotlab-websocket-service --debug --port 8000
+  iotlab-websocket-service --use-local-api --token token
   ```
 
 - Start the websocket client:
 
   ```shell
-  iotlab-websocket-client --host localhost --port 8000 --token token --exp-id 123
+  iotlab-websocket-client --insecure --api-protocol http  --node localhost.local --exp-id 123
   ```

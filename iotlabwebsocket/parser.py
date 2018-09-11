@@ -21,9 +21,9 @@ def common_parser(description):
                         help="REST API server host")
     parser.add_argument('--api-port', type=str, default=DEFAULT_API_PORT,
                         help="REST API server port")
-    parser.add_argument('--api-user', type=str, default=None,
+    parser.add_argument('--api-user', type=str, default="",
                         help="username used to connect to the REST API")
-    parser.add_argument('--api-password', type=str, default=None,
+    parser.add_argument('--api-password', type=str, default="",
                         help="password used to connect to the REST API")
     return parser
 
@@ -58,5 +58,4 @@ def client_cli_parser():
                              "protocol (ws)")
     parser.add_argument('--debug', action='store_true',
                         help="enable debug mode")
-    parser
     return parser

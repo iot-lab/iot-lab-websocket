@@ -1,6 +1,5 @@
 """websocket client command line interface"""
 
-import json
 import logging
 
 import tornado
@@ -8,8 +7,18 @@ import tornado
 from .logger import setup_client_logger
 from .logger import CLIENT_LOGGER as LOGGER
 from .clients.websocket_client import WebsocketClient
-from .api import ApiHelper
+from .api import ApiClient
 from .parser import client_cli_parser
+
+
+def _parse_node(node_fqdn):
+    node_split = node_fqdn.split('.')
+
+    if len(node_split) < 2:
+        raise ValueError("Invalid node name '{}'. Node name should use the "
+                         "following scheme: <hostname>.<site>"
+                         .format(node_fqdn))
+    return node_split[:2]
 
 
 def main(args=None):
@@ -19,27 +28,25 @@ def main(args=None):
         LOGGER.setLevel(logging.ERROR)
     setup_client_logger()
     try:
-        # Fetch node list
-        api = ApiHelper(args.api_protocol, args.api_host, args.api_port,
-                        args.api_user, args.api_password)
-        nodes_url = '{}/{}/nodes'.format(api.url, args.exp_id)
-        http_client = tornado.httpclient.HTTPClient()
-        request = tornado.httpclient.HTTPRequest(nodes_url,
-                                                 auth_username=api.username,
-                                                 auth_password=api.password)
-        request.headers["Content-Type"] = "application/json"
-        response = http_client.fetch(request).buffer.read()
-        for item in json.loads(response)['items']:
-            print('node:', item['network_address'])
-
+        node, site = _parse_node(args.node)
+        token = args.token
+        if not args.token:
+            # Fetch token from API
+            api = ApiClient(args.api_protocol, args.api_host, args.api_port,
+                            args.api_user, args.api_password)
+            token = api.fetch_token_sync(args.exp_id)  # Blocking call
         protocol = 'wss'
         if args.insecure:
             protocol = 'ws'
-        ws_url = "{}://{}:{}/ws/{}/{}/{}".format(
-            protocol, args.host, args.port, args.exp_id, args.node, args.type)
-        ws_client = WebsocketClient(ws_url, args.token)
+        ws_url = "{}://{}:{}/ws/{}/{}/{}/{}".format(
+            protocol, args.host, args.port, site, args.exp_id, node, args.type)
+        ws_client = WebsocketClient(ws_url, token)
         ws_client.run()
         tornado.ioloop.IOLoop.current().start()
+    except tornado.httpclient.HTTPClientError as exc:
+        print("Cannot fetch token from API: {}".format(exc))
+    except ValueError as exc:
+        print("Error: {}".format(exc))
     except KeyboardInterrupt:
         LOGGER.debug("Exiting")
         tornado.ioloop.IOLoop.current().stop()

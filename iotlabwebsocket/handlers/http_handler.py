@@ -6,17 +6,7 @@ from tornado import web
 
 from ..logger import LOGGER
 
-NODES = { 'items': [
-    { 'network_address': 'nrf52840dk-1.devsaclay.iot-lab.info' },
-    { 'network_address': 'arduino-zero-1.devsaclay.iot-lab.info'},
-    { 'network_address': 'st-lrwan1-1.devsaclay.iot-lab.info'},
-    { 'network_address': 'st-lrwan1-2.devsaclay.iot-lab.info'},
-    { 'network_address': 'st-iotnode-1.devsaclay.iot-lab.info'},
-    { 'network_address': 'm3-1.devsaclay.iot-lab.info'},
-    { 'network_address': 'nrf52dk-2.devsaclay.iot-lab.info'},
-    { 'network_address': 'nrf52dk-1.devsaclay.iot-lab.info'},
-    { 'network_address': 'microbit-2.devsaclay.iot-lab.info'}
-]}
+NODES = {'items': [{'network_address': 'localhost.local'}]}
 
 
 class HttpApiRequestHandler(web.RequestHandler):
@@ -53,5 +43,7 @@ class HttpApiRequestHandler(web.RequestHandler):
         elif resource == 'nodes':
             self.write(json.dumps(NODES))
         else:
-            self.request.set_status(404)
+            self.set_status(404)
+            self.finish("Invalid resource '{}'".format(resource))
+            return
         self.finish()

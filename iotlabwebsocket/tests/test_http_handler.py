@@ -5,22 +5,25 @@ from collections import namedtuple
 
 import tornado.testing
 
-from iotlabwebsocket import DEFAULT_AUTH_HOST, DEFAULT_AUTH_PORT
+from iotlabwebsocket.api import ApiClient
 from iotlabwebsocket.logger import LOGGER
+from iotlabwebsocket.handlers.http_handler import NODES
 from iotlabwebsocket.web_application import WebApplication
 
 Response = namedtuple("Response", ["code", "body"])
 
 
-class TestHttpAuthHandlerApp(tornado.testing.AsyncHTTPTestCase):
+class TestHttpApiHandlerApp(tornado.testing.AsyncHTTPTestCase):
 
     def get_app(self):
-        return WebApplication(DEFAULT_AUTH_HOST, DEFAULT_AUTH_PORT,
-                              use_local_auth=True, token='token')
+        return WebApplication(ApiClient('http'), use_local_api=True,
+                              token='token')
 
-    def _check_request(self, expected_response, path='/experiments/123/token',
+    def _check_request(self, expected_response, resource='token',
+                       path='/api/experiments/123/{}',
                        headers={"Content-Type": "application/json"}):
-        response = self.fetch(path, method="GET", headers=headers)
+        response = self.fetch(path.format(resource), method="GET",
+                              headers=headers)
         assert response.code == expected_response.code
         assert response.body == expected_response.body
 
@@ -29,23 +32,32 @@ class TestHttpAuthHandlerApp(tornado.testing.AsyncHTTPTestCase):
                                      json.dumps({'token': 'token'}).encode())
         self._check_request(expected_response)
 
+    def test_valid_node_request(self):
+        expected_response = Response(200, json.dumps(NODES).encode())
+        self._check_request(expected_response, resource='nodes')
+
     def test_invalid_experiment_id(self):
-        for path in ['/experiments/abc/token', '/experiments//token']:
-            path = '/experiments/abc/token'
+        for path in ['/api/experiments/abc/token', '/api/experiments//token']:
+            path = '/api/experiments/abc/token'
             response = self.fetch(path, method="GET",
                                   headers={"Content-Type": "application/json"})
             assert response.code == 404
 
+    def test_invalid_resource(self):
+        resource = 'invalid'
+        expected_response = Response(
+            404, "Invalid resource '{}'".format(resource).encode())
+        self._check_request(expected_response, resource=resource)
 
-class TestHttpAuthHandlerInvalidTokenApp(tornado.testing.AsyncHTTPTestCase):
+
+class TestHttpApiHandlerInvalidTokenApp(tornado.testing.AsyncHTTPTestCase):
 
     def get_app(self):
-        return WebApplication(DEFAULT_AUTH_HOST, DEFAULT_AUTH_PORT,
-                              use_local_auth=True)
+        return WebApplication(ApiClient('http'), use_local_api=True)
 
     def test_invalid_token_request(self):
         expected_response = Response(400, b'No internal token set')
-        response = self.fetch('/experiments/123/token', method="GET",
+        response = self.fetch('/api/experiments/123/token', method="GET",
                               headers={"Content-Type": "application/json"})
         assert response.code == expected_response.code
         assert response.body == expected_response.body

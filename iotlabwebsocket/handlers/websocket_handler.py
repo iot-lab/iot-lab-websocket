@@ -1,9 +1,6 @@
 """iotlabwebserial websocket connections handler."""
 
-import json
-
 from tornado import websocket, gen
-from tornado.httpclient import AsyncHTTPClient, HTTPRequest, HTTPError
 
 from ..logger import LOGGER
 
@@ -16,7 +13,7 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
     def _check_path(self):
         # Check path is correct
         path = self.request.path
-        self.experiment_id, self.node = path.split('/')[-3:-1]
+        self.site, self.experiment_id, self.node = path.split('/')[-4:-1]
         msg = None
         if not self.experiment_id or not self.node:
             msg = "invalid url: {}".format(path)
@@ -32,41 +29,44 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
     def _check_token(self):
         subprotocols = self.request.headers.get(
             "Sec-WebSocket-Protocol", "").split(',')
-        if len(subprotocols) != 2 or subprotocols[0] != 'auth_token':
+        if len(subprotocols) != 2 or subprotocols[0] != 'token':
             LOGGER.warning("Reject websocket connection: invalib subprotocol")
             self.set_status(401)  # Authentication failed
             self.finish("Invalid subprotocols")
             raise gen.Return(False)
 
-        token = subprotocols[1]
+        req_token = subprotocols[1]
 
         # Fetch the token from the authentication server
-        http_client = AsyncHTTPClient()
-        request = HTTPRequest("{}/{}/token".format(self.api.url,
-                                                   self.experiment_id))
-        try:
-            response = yield http_client.fetch(request)
-        except HTTPError as exc:
-            LOGGER.warning("Failed to fetch token: %s", exc)
-            self.set_status(401)  # Authentication failed
-            self.finish("Failed to fetch token")
-            raise gen.Return(False)
-
-        try:
-            auth_token = json.loads(response.body.decode())['token']
-        except ValueError as exc:
-            LOGGER.warning("Cannot decode token: %s", exc)
+        api_token = yield self.api.fetch_token_async(self.experiment_id)
 
         LOGGER.debug("Fetched token '%s' for experiment id '%s'",
-                     auth_token, self.experiment_id)
+                     api_token, self.experiment_id)
 
-        if token != auth_token:
+        if req_token != api_token:
             LOGGER.warning("Reject websocket connection: invalib token")
             self.set_status(401)  # Authentication failed
-            self.finish("Invalid token")
+            self.finish("Invalid token '{}'".format(req_token))
             raise gen.Return(False)
 
         raise gen.Return(True)
+
+    @gen.coroutine
+    def _check_node(self):
+        nodes = yield self.api.fetch_nodes_async(self.experiment_id)
+        for node in nodes:
+            print(node)
+            node_elem = node.split('.')
+            if node_elem[0] == self.node and node_elem[1] == self.site:
+                LOGGER.debug("Requested node found in experiment")
+                raise gen.Return(True)
+
+        LOGGER.warning("Invalid node '%s' for experiment id '%s' in site "
+                       "'%s'", self.node, self.experiment_id, self.site)
+        # No node matches the requested ressource for the experiment and site.
+        self.set_status(401)  # Authentication failed
+        self.finish("Invalid node")
+        raise gen.Return(False)
 
     def initialize(self, api):
         """Initialize the api information."""
@@ -81,6 +81,8 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
         This method also checks that the token provided in the websocket
         connection matches the corresponding one generated on the
         authentication host.
+        Finally, it checks that the requested node belongs to the experiment
+        and the site.
         """
         # Check path is correct
         if not self._check_path():
@@ -90,6 +92,11 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
         # call to the API, we wait for it to complete.
         token_valid = yield self._check_token()
         if not token_valid:
+            return
+
+        # Check that the requested node is in the experiment
+        node_valid = yield self._check_node()
+        if not node_valid:
             return
 
         LOGGER.info("Websocket connection for experiment '%s' on node '%s'",
