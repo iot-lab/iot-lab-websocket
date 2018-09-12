@@ -50,12 +50,12 @@ class ApiClient(object):
         raise gen.Return(response.buffer.read())
 
     def _request(self, exp_id, resource):
-        nodes_url = '{}/{}/{}'.format(self.url, exp_id, resource)
+        _url = '{}/{}/{}'.format(self.url, exp_id, resource)
         kwargs = {}
         if self.username and self.password:
             kwargs.update({'auth_username': self.username,
                            'auth_password': self.password})
-        return tornado.httpclient.HTTPRequest(nodes_url, **kwargs)
+        return tornado.httpclient.HTTPRequest(_url, **kwargs)
 
     @staticmethod
     def _parse_nodes_response(response):

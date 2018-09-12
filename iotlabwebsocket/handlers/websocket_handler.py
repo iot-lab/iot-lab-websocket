@@ -55,7 +55,6 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
     def _check_node(self):
         nodes = yield self.api.fetch_nodes_async(self.experiment_id)
         for node in nodes:
-            print(node)
             node_elem = node.split('.')
             if node_elem[0] == self.node and node_elem[1] == self.site:
                 LOGGER.debug("Requested node found in experiment")
