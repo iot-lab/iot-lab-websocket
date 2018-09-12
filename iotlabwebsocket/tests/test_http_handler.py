@@ -34,7 +34,7 @@ class TestHttpApiHandlerApp(tornado.testing.AsyncHTTPTestCase):
 
     def test_valid_node_request(self):
         expected_response = Response(200, json.dumps(NODES).encode())
-        self._check_request(expected_response, resource='nodes')
+        self._check_request(expected_response, resource='')
 
     def test_invalid_experiment_id(self):
         for path in ['/api/experiments/abc/token', '/api/experiments//token']:

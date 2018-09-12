@@ -59,20 +59,17 @@ class ApiClient(object):
 
     @staticmethod
     def _parse_nodes_response(response):
-        nodes = []
-        for item in json.loads(response)['items']:
-            nodes.append(item['network_address'])
-        return nodes
+        return json.loads(response)['nodes']
 
     def fetch_nodes_sync(self, exp_id):
         """Fetch the list of nodes using a synchronous call."""
-        response = ApiClient._fetch_sync(self._request(exp_id, 'nodes'))
+        response = ApiClient._fetch_sync(self._request(exp_id, ''))
         return ApiClient._parse_nodes_response(response.decode())
 
     @gen.coroutine
     def fetch_nodes_async(self, exp_id):
         """Fetch the list of nodes using an asynchronous call."""
-        response = yield ApiClient._fetch_async(self._request(exp_id, 'nodes'))
+        response = yield ApiClient._fetch_async(self._request(exp_id, ''))
         raise gen.Return(ApiClient._parse_nodes_response(response.decode()))
 
     def fetch_token_sync(self, exp_id):

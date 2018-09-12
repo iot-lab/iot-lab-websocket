@@ -6,7 +6,7 @@ from tornado import web
 
 from ..logger import LOGGER
 
-NODES = {'items': [{'network_address': 'localhost.local'}]}
+NODES = {'nodes': ['localhost.local']}
 
 
 class HttpApiRequestHandler(web.RequestHandler):
@@ -40,7 +40,7 @@ class HttpApiRequestHandler(web.RequestHandler):
                          experiment_id)
             LOGGER.debug("Internal token: '%s'", self.token)
             self.write(json.dumps({"token": self.token}))
-        elif resource == 'nodes':
+        elif not resource:
             self.write(json.dumps(NODES))
         else:
             self.set_status(404)
