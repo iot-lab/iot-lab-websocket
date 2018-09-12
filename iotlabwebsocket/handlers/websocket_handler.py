@@ -49,6 +49,7 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
             self.finish("Invalid token '{}'".format(req_token))
             raise gen.Return(False)
 
+        LOGGER.debug("Provided token '%s' verified", req_token)
         raise gen.Return(True)
 
     @gen.coroutine
