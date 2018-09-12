@@ -17,7 +17,7 @@ class WebApplication(tornado.web.Application):
     def __init__(self, api, use_local_api=False, token=''):
         settings = {'debug': True}
         handlers = [
-            (r"/ws/[a-z]+/[0-9]+/[a-z]+-?[0-9]*/serial",
+            (r"/ws/[a-z]+/[0-9]+/[a-z0-9]+-?[a-z0-9]*-?[0-9]*/serial",
              WebsocketClientHandler, dict(api=api))
         ]
 
