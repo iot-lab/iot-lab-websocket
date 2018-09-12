@@ -1,5 +1,7 @@
 """websocket client command line interface"""
 
+# pylint:disable=superfluous-parens
+
 import logging
 
 import tornado
