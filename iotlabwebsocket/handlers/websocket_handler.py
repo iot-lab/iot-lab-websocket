@@ -25,17 +25,23 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
             return False
         return True
 
+    def select_subprotocol(self, subprotocols):
+        """Only accept the 'token' subprotocol"""
+        if "token" in subprotocols:
+            return "token"
+        return None
+
     @gen.coroutine
     def _check_token(self):
         subprotocols = self.request.headers.get(
             "Sec-WebSocket-Protocol", "").split(',')
-        if len(subprotocols) != 2 or subprotocols[0] != 'token':
+        if len(subprotocols) != 2 or subprotocols[0].strip() != 'token':
             LOGGER.warning("Reject websocket connection: invalib subprotocol")
             self.set_status(401)  # Authentication failed
             self.finish("Invalid subprotocols")
             raise gen.Return(False)
 
-        req_token = subprotocols[1]
+        req_token = subprotocols[1].strip()
 
         # Fetch the token from the authentication server
         api_token = yield self.api.fetch_token_async(self.experiment_id)
@@ -44,7 +50,8 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
                      api_token, self.experiment_id)
 
         if req_token != api_token:
-            LOGGER.warning("Reject websocket connection: invalib token")
+            LOGGER.warning("Reject websocket connection: invalib token '%s'",
+                           req_token)
             self.set_status(401)  # Authentication failed
             self.finish("Invalid token '{}'".format(req_token))
             raise gen.Return(False)
@@ -84,6 +91,9 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
         Finally, it checks that the requested node belongs to the experiment
         and the site.
         """
+
+        LOGGER.info("Websocket connection request")
+
         # Check path is correct
         if not self._check_path():
             return
@@ -99,11 +109,11 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
         if not node_valid:
             return
 
-        LOGGER.info("Websocket connection for experiment '%s' on node '%s'",
-                    self.experiment_id, self.node)
-
         # Let parent class correctly configure the websocket connection
         super(WebsocketClientHandler, self).get(*args, **kwargs)
+
+        LOGGER.info("Websocket connection for experiment '%s' on node '%s'",
+                    self.experiment_id, self.node)
 
     def check_origin(self, origin):
         """Allow connections from anywhere."""
