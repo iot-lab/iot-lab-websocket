@@ -21,7 +21,7 @@ URL = "{}://{}:{}/ws/{}/{}/{}/serial"
 @mock.patch('iotlabwebsocket.clients.websocket_client.WebsocketClient.run')
 @mock.patch('iotlabwebsocket.clients.'
             'websocket_client.WebsocketClient.__init__')
-@mock.patch('tornado.ioloop.IOLoop.current')
+@mock.patch('tornado.ioloop.IOLoop.instance')
 class ClientCliTest(unittest.TestCase):
 
     def test_main_client_cli_default(self, ioloop, init, run, fetch):

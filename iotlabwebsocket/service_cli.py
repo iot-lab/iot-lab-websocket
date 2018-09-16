@@ -19,8 +19,8 @@ def main(args=None):
     try:
         app.listen(args.port)
         LOGGER.info('Application started, listening on port %s', args.port)
-        tornado.ioloop.IOLoop.current().start()
+        tornado.ioloop.IOLoop.instance().start()
     except KeyboardInterrupt:
         LOGGER.debug('Shuting down service')
         app.stop()
-        tornado.ioloop.IOLoop.current().stop()
+        tornado.ioloop.IOLoop.instance().stop()

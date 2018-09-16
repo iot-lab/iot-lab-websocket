@@ -44,11 +44,11 @@ def main(args=None):
             protocol, args.host, args.port, site, args.exp_id, node, args.type)
         ws_client = WebsocketClient(ws_url, token)
         ws_client.run()
-        tornado.ioloop.IOLoop.current().start()
+        tornado.ioloop.IOLoop.instance().start()
     except tornado.httpclient.HTTPClientError as exc:
         print("Cannot fetch token from API: {}".format(exc))
     except ValueError as exc:
         print("Error: {}".format(exc))
     except KeyboardInterrupt:
         LOGGER.debug("Exiting")
-        tornado.ioloop.IOLoop.current().stop()
+        tornado.ioloop.IOLoop.instance().stop()
