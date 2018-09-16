@@ -36,17 +36,16 @@ class ApiClient(object):
 
     @staticmethod
     def _fetch_sync(request):
-        http_client = tornado.httpclient.HTTPClient()
         request.headers["Content-Type"] = "application/json"
-        response = http_client.fetch(request).buffer.read()
-        return response
+        client = tornado.httpclient.HTTPClient()
+        return client.fetch(request).buffer.read()
 
     @staticmethod
     @gen.coroutine
     def _fetch_async(request):
-        http_client = tornado.httpclient.AsyncHTTPClient()
         request.headers["Content-Type"] = "application/json"
-        response = yield http_client.fetch(request)
+        client = tornado.httpclient.AsyncHTTPClient()
+        response = yield client.fetch(request)
         raise gen.Return(response.buffer.read())
 
     def _request(self, exp_id, resource):
