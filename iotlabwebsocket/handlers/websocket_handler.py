@@ -11,9 +11,20 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
     """Class that manage websocket connections."""
 
     def _check_path(self):
-        # Check path is always correct
+        # Check path is correct
         path = self.request.path
-        self.site, self.experiment_id, self.node = path.split('/')[-4:-1]
+        self.site, self.experiment_id, self.node, self.type = \
+            path.split('/')[-4:]
+        msg = None
+	if self.type == 'ssh' and not self.node.startswith('node-'):
+            msg = "ssh not allowed on node '{}'".format(self.node)
+
+        if msg is not None:
+            LOGGER.warning("Reject websocket connection: %s", msg)
+            self.set_status(404)  # Not found
+            self.finish(msg)
+            return False
+
         return True
 
     def select_subprotocol(self, subprotocols):
@@ -119,16 +130,16 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
         """
         self.set_nodelay(True)
         LOGGER.debug("Websocket connection opened for node '%s'", self.node)
-        self.application.handle_websocket_open(self)
+        self.application.handle_websocket_open(self, self.type)
 
     @gen.coroutine
     def on_message(self, data):
         """Triggered when data is received from the websocket client."""
-        self.application.handle_websocket_data(self, data)
+        self.application.handle_websocket_data(self, data, self.type)
 
     def on_close(self):
         """Manage the disconnection of the websocket."""
         LOGGER.info("Websocket connection closed for node '%s', code: %d, "
                     "reason: '%s'",
                     self.node, self.close_code, self.close_reason)
-        self.application.handle_websocket_close(self)
+        self.application.handle_websocket_close(self, self.type)

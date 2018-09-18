@@ -42,7 +42,9 @@ if __name__ == '__main__':
               ],
           },
           install_requires=[
-            'tornado>=5.1',
+            'tornado>=5.1', 'paramiko==2.1.4',
+            'cffi', 'setuptools', 'bcrypt', 'pynacl', 'cryptography',
+            'ipaddress', 'enum34'
           ],
           classifiers=[
             'Development Status :: 4 - Beta',
