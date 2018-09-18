@@ -6,7 +6,7 @@ from tornado import web
 
 from ..logger import LOGGER
 
-NODES = {'nodes': ['localhost.local']}
+NODES = {'nodes': ['localhost.local', 'reba-sed.local']}
 
 
 def _nodes():

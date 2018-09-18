@@ -53,7 +53,7 @@ def client_cli_parser():
     parser.add_argument('--exp-id', type=str, default="",
                         help="experiment id associated to node")
     parser.add_argument('--type', default="serial", nargs='?',
-                        choices=['serial'],
+                        choices=['serial', 'ssh'],
                         help="the type of connection (only serial supported "
                              "for the moment)")
     parser.add_argument('--insecure', action='store_true',
