@@ -39,8 +39,7 @@ class WebApplication(tornado.web.Application):
         self.serial_websockets = defaultdict(list)
         self.user_connections = defaultdict(int)
 
-        self.ssh_clients = defaultdict(SSHClient)
-        self.ssh_websockets = defaultdict(list)
+        self.ssh_websockets = {}
 
         super(WebApplication, self).__init__(handlers, **settings)
 
@@ -65,12 +64,15 @@ class WebApplication(tornado.web.Application):
             self.user_connections[user] += 1
             self.serial_websockets[node].append(websocket)
 
-    def _websocket_ssh_open(self, websocket, user, site, node):
-        ssh_client = self.ssh_clients[node]
-        if not self.ssh_websockets[node]:
-            # Open the tcp connection on first websocket connection.
-            ssh_client.start(node, on_data=self.handle_ssh_data,
-                             on_close=self.handle_ssh_close)
+    @gen.coroutine
+    def _websocket_ssh_open(self, websocket, node):
+        ssh_client = SSHClient(node, on_data=self.handle_ssh_data,
+                               on_close=self.handle_ssh_close)
+        started = yield ssh_client.start()
+        if not started:
+            websocket.close(code=1001,
+			    reason="Cannot connect to node{}".format(node))
+            return
         if self.user_connections[user] == MAX_WEBSOCKETS_PER_USER:
             websocket.close(
                 code=1000,
@@ -79,9 +81,9 @@ class WebApplication(tornado.web.Application):
                         .format(MAX_WEBSOCKETS_PER_USER, user, site)))
         else:
             self.user_connections[user] += 1
-            self.ssh_websockets[node].append(websocket)
+            self.ssh_websockets[ssh_client] = websocket
 
-    def handle_websocket_open(self, websocket, client_type):
+    def handle_websocket_open(self, websocket, client_type='serial'):
         """Handle the websocket connection once authentified."""
         node = websocket.node
         user = websocket.user
@@ -103,7 +105,9 @@ class WebApplication(tornado.web.Application):
                                     "message '{}'.\n".format(data))
 
     def _websocket_ssh_data(self, websocket, data):
-        ssh_client = self.ssh_clients[websocket.node]
+        for client, websocket_value in self.ssh_websockets.items():
+            if websocket_value is websocket:
+                ssh_client = client
         if ssh_client.ready:
             ssh_client.send(data.encode())
         else:
@@ -132,16 +136,17 @@ class WebApplication(tornado.web.Application):
             del tcp_client
 
     def _websocket_ssh_close(self, websocket, node):
-        ssh_client = self.ssh_clients[websocket.node]
-        self.ssh_websockets[node].remove(websocket)
+        ssh_client = None
+        for client, websocket_value in self.ssh_websockets.items():
+            if websocket_value is websocket:
+                ssh_client = client
+                if ssh_client.ready:
+                    LOGGER.debug("Closing SSH connection to node '%s'", node)
+                    ssh_client.stop()
+        if ssh_client in self.ssh_websockets:
+            self.ssh_websockets.pop(ssh_client)
 
-        # websockets list is now empty for given node, closing tcp connection.
-        if ssh_client.ready and not self.ssh_websockets[node]:
-            LOGGER.debug("Closing SSH connection to node '%s'", node)
-            ssh_client.stop()
-            del ssh_client
-
-    def handle_websocket_close(self, websocket, client_type):
+    def handle_websocket_close(self, websocket, client_type='serial):
         """Handle the disconnection of a websocket."""
         node = websocket.node
         user = websocket.user
@@ -167,23 +172,21 @@ class WebApplication(tornado.web.Application):
             websocket.close(code=1000, reason=reason)
 
     @gen.coroutine
-    def handle_ssh_data(self, node, data):
-        """Forwards data from SSH connection to all websocket clients."""
-        for websocket in self.ssh_websockets[node]:
-            websocket.write_message(data)
+    def handle_ssh_data(self, client, data):
+        """Forwards data from SSH connection to the attached websocket."""
+        self.ssh_websockets[client].write_message(data)
 
-    def handle_ssh_close(self, node):
-        """Close all websockets connected to a node when SSH is closed."""
-        for websocket in self.ssh_websockets[node]:
-            websocket.close(code=1000,
-                            reason="Connection to {} is closed".format(node))
+    def handle_ssh_close(self, client):
+        """Close the websocket connected when the attached SSH is closed."""
+        self.ssh_websockets[client].close(code=1000,
+                                          reason="Connection to {} is closed".format(node))
 
     def stop(self):
+        # pylint:disable=undefined-loop-variable
         """Stop any pending websocket connection."""
         for websockets in self.serial_websockets.values():
             for websocket in websockets:
                 websocket.close(code=1001, reason="server is restarting")
 
         for websockets in self.ssh_websockets.values():
-            for websocket in websockets:
-                websocket.close(code=1001, reason="server is restarting")
+            websocket.close(code=1001, reason="server is restarting")
