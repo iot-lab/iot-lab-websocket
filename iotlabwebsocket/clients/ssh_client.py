@@ -1,95 +1,89 @@
 """SSH client"""
 
-import re
-import sys
-import time
-import paramiko
-
 import tornado
 from tornado import gen
 
-from ..logger import LOGGER
+import paramiko
 
-END_STDOUT = 'End of stdout buffer. Exit'
+from ..logger import LOGGER
 
 
 class SSHClient(object):
     # pylint:disable=too-few-public-methods
     """Class that connects to a websocket server while listening to stdin."""
 
-    def __init__(self):
-        self.host = None
-        self.username = None
-        self.on_data = None
-        self.on_close = None
-        self._ssh = None
-
-    @property
-    def ready(self):
-        return self._ssh is not None
-
-    @gen.coroutine
-    def _connect(self, host):
-        LOGGER.debug("Connect to HOST %s via SSH", host)
-        self._ssh = paramiko.SSHClient()
-        self._ssh.load_system_host_keys()
-        self._ssh.connect(hostname=host, username='root')
-        self.channel = self._ssh.get_transport().open_session()
-        self.channel.get_pty()
-        self.channel.invoke_shell()
-        self.stdin = self.channel.makefile('wb')
-        self.stdout = self.channel.makefile('r')
-        LOGGER.debug("SSH connection to '%s' opened.", host)
-
-    @gen.coroutine
-    def start(self, host, on_data, on_close):
-        """Connect and listen to a SSH server."""
+    def __init__(self, host, on_data, on_close):
         self.host = host
         self.on_data = on_data
         self.on_close = on_close
-        # Connect to SSH host
-        yield self._connect(host)
+        self.username = 'root'
+        self._ssh = None
+        self._channel = None
+        self._listen = False
+
+    @property
+    def ready(self):
+        """Check if SSH connection is ready."""
+        return self._ssh is not None
 
     @gen.coroutine
+    def _connect(self):
+        LOGGER.debug("Connect to host %s via SSH", self.host)
+        self._ssh = paramiko.SSHClient()
+        try:
+            self._ssh.load_system_host_keys()
+            self._ssh.connect(hostname=self.host, username=self.username)
+            self._channel = self._ssh.get_transport().open_session()
+            self._channel.get_pty()
+            self._channel.invoke_shell()
+        except paramiko.ssh_exception.SSHException:
+            LOGGER.error("Cannot connect via SSH to %s", self.host)
+            raise gen.Return(False)
+        LOGGER.debug("SSH connection to '%s' opened.", self.host)
+        raise gen.Return(True)
+
+    @gen.coroutine
+    def _listen_channel(self):
+        while self._channel.recv_ready():
+            data = self._channel.recv(1)
+            self.on_data(self, data)
+
+        if self._listen:
+            # Avoid busy loops with 100% CPU usage
+            yield gen.sleep(0.1)
+
+            ioloop = tornado.ioloop.IOLoop.current()
+            ioloop.spawn_callback(self._listen_channel)
+
+    @gen.coroutine
+    def start(self):
+        """Connect and listen to a SSH server."""
+        # Connect to SSH host
+        connected = yield self._connect()
+        if not connected:
+            raise gen.Return(False)
+
+        self._listen = True
+        ioloop = tornado.ioloop.IOLoop.current()
+        ioloop.spawn_callback(self._listen_channel)
+        raise gen.Return(True)
+
     def send(self, command):
         """Send data via the SSH connection."""
         if not self.ready:
             return
-        command = command.decode()
-        LOGGER.debug("Send command '%s' to SSH connection", command)
-        # self._listen_channel()
-        self.stdin.write(command + '\n')
-        echo_cmd = 'echo {} $?'.format(END_STDOUT)
-        self.stdin.write(echo_cmd + '\n')
-        self.stdin.flush()
-        shout = []
-        for line in self.stdout:
-            if line.startswith(command) or line.startswith(echo_cmd):
-                shout = []
-            elif line.startswith(END_STDOUT):
-                exit_status = int(line.rsplit(maxsplit=1)[1])
-                if exit_status:
-                    shout = []
-                break
-            else:
-                shout.append(re.compile(r'(\x9B|\x1B\[)[0-?]*[ -/]*[@-~]')
-                             .sub('', line)
-                             .replace('\b', '').replace('\r', ''))
-        
-        if shout and echo_cmd in shout[-1]:
-            shout.pop()
-        # if shout and command in shout[0]:
-        #     shout.pop(0)
-
-        # LOGGER.debug(shout)
-        for line in shout:
-            # LOGGER.debug("Reply line %s", line)
-            yield self.on_data(self.host, line)
+        self._channel.send(command)
+        # Handle exit in ssh as closing command for the websocket
+        if command == b'exit\n':
+            LOGGER.debug("Exit command: stopping SSH connection")
+            self.on_close(self)
 
     def stop(self):
+        """Stop the SSH connection."""
         if self.ready:
             LOGGER.debug("Stopping SSH connection")
             self._ssh.close()
             self._ssh = None
+            self._listen = False
         elif self.host is not None:
-            self.on_close(self.host)
+            self.on_close(self)
