@@ -51,4 +51,5 @@ def main(args=None):
         print("Error: {}".format(exc))
     except KeyboardInterrupt:
         LOGGER.debug("Exiting")
+    finally:
         tornado.ioloop.IOLoop.instance().stop()

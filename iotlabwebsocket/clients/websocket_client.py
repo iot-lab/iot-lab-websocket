@@ -33,19 +33,18 @@ class WebsocketClient(object):
     @gen.coroutine
     def _listen_websocket(self):
         while True:
-            try:
-                data = yield self.websocket.read_message()
-                if data is None:
-                    LOGGER.debug("Websocket connection closed.")
-                    tornado.ioloop.IOLoop.current().stop()
-                    return
-                # Print received data to stdout
-                sys.stdout.write(data)
-                sys.stdout.flush()
-            except (WebSocketClosedError, StreamClosedError) as exc:
-                LOGGER.error("Websocket connection failed: %s", exc)
+            data = yield self.websocket.read_message()
+            if data is None:
+                LOGGER.debug("Websocket connection closed.")
+                # Let some time to the loop to catch any pending exception
+                yield gen.sleep(0.1)
+                tornado.ioloop.IOLoop.instance().stop()
                 return
+            # Print received data to stdout
+            sys.stdout.write(data)
+            sys.stdout.flush()
 
+    @gen.coroutine
     def _listen_stdin(self):
         LOGGER.debug("Start listening to stdin")
 
@@ -64,10 +63,9 @@ class WebsocketClient(object):
         yield self._connect()
 
         if self.websocket is None:
-            tornado.ioloop.IOLoop.current().stop()
-            return
+            raise gen.Return()
 
         # Start stdin listener as background task
-        self._listen_stdin()
-        # Start websocket listener in a coroutine
-        self._listen_websocket()
+        yield self._listen_stdin()
+        # Start websocket listener
+        yield self._listen_websocket()
