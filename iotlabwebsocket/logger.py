@@ -4,7 +4,7 @@ import sys
 import logging
 from logging.handlers import RotatingFileHandler
 
-LOGGER = logging.getLogger(__name__)
+LOGGER = logging.getLogger("iotlabwebsocket")
 LOGGER.setLevel(logging.DEBUG)
 
 CLIENT_LOGGER = logging.getLogger("iotlabwebsocket-client")
@@ -33,6 +33,8 @@ def setup_client_logger():
     """Setup logger for client application."""
     formatter = logging.Formatter('%(asctime)-15s %(levelname)-7s '
                                   '%(filename)20s:%(lineno)-3d %(message)s')
+    for handler in CLIENT_LOGGER.handlers:
+        CLIENT_LOGGER.removeHandler(handler)
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setFormatter(formatter)
     console_handler.setLevel(logging.INFO)

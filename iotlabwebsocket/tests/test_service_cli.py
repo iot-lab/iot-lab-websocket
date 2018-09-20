@@ -2,6 +2,7 @@
 
 import os.path
 import sys
+import tempfile
 import argparse
 import logging
 import unittest
@@ -9,7 +10,7 @@ import unittest
 import mock
 
 from iotlabwebsocket.api import ApiClient
-from iotlabwebsocket.logger import LOGGER
+from iotlabwebsocket.logger import LOGGER, setup_server_logger
 from iotlabwebsocket.service_cli import main
 from iotlabwebsocket.web_application import WebApplication
 
