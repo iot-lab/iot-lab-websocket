@@ -19,7 +19,6 @@ class SSHClient(object):
         self.username = 'root'
         self._ssh = None
         self._channel = None
-        self._listen = False
 
     @property
     def ready(self):
@@ -36,6 +35,7 @@ class SSHClient(object):
             self._channel = self._ssh.get_transport().open_session()
             self._channel.get_pty()
             self._channel.invoke_shell()
+            self._channel.setblocking(0)
         except paramiko.ssh_exception.SSHException:
             LOGGER.error("Cannot connect via SSH to %s", self.host)
             raise gen.Return(False)
@@ -45,15 +45,14 @@ class SSHClient(object):
     @gen.coroutine
     def _listen_channel(self):
         while self._channel.recv_ready():
-            data = self._channel.recv(1)
+            data = self._channel.recv(1024)
             self.on_data(self, data)
 
-        if self._listen:
-            # Avoid busy loops with 100% CPU usage
-            yield gen.sleep(0.1)
+        # Avoid busy loops with 100% CPU usage
+        yield gen.sleep(0.1)
 
-            ioloop = tornado.ioloop.IOLoop.current()
-            ioloop.spawn_callback(self._listen_channel)
+        ioloop = tornado.ioloop.IOLoop.current()
+        ioloop.spawn_callback(self._listen_channel)
 
     @gen.coroutine
     def start(self):
@@ -63,7 +62,6 @@ class SSHClient(object):
         if not connected:
             raise gen.Return(False)
 
-        self._listen = True
         ioloop = tornado.ioloop.IOLoop.current()
         ioloop.spawn_callback(self._listen_channel)
         raise gen.Return(True)
@@ -84,6 +82,5 @@ class SSHClient(object):
             LOGGER.debug("Stopping SSH connection")
             self._ssh.close()
             self._ssh = None
-            self._listen = False
         elif self.host is not None:
             self.on_close(self)
