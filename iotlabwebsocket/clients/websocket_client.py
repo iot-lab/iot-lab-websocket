@@ -4,8 +4,7 @@ import sys
 
 import tornado
 from tornado import gen
-from tornado.iostream import StreamClosedError
-from tornado.websocket import websocket_connect, WebSocketClosedError
+from tornado.websocket import websocket_connect
 from tornado.httpclient import HTTPClientError
 
 from ..logger import CLIENT_LOGGER as LOGGER
