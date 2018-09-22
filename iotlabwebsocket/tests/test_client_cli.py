@@ -36,7 +36,7 @@ class ClientCliTest(unittest.TestCase):
         init.assert_called_with(default_url, 'token')
         fetch.assert_called_with("")
         run.assert_called_once()
-        ioloop.assert_called_once()  # for the start
+        ioloop.call_count == 2  # one for the start, one for the stop
 
     def test_main_client_cli_args(self, ioloop, init, run, fetch):
         init.return_value = None
@@ -55,7 +55,7 @@ class ClientCliTest(unittest.TestCase):
         init.assert_called_with(expected_url, token_test)
         assert fetch.call_count == 0
         run.assert_called_once()
-        ioloop.assert_called_once()  # for the start
+        ioloop.call_count == 2  # one for the start, one for the stop
         assert CLIENT_LOGGER.getEffectiveLevel() == logging.ERROR
 
     def test_main_client_insecure(self, ioloop, init, run, fetch):
@@ -69,7 +69,7 @@ class ClientCliTest(unittest.TestCase):
 
         init.assert_called_with(insecure_url, fetch.return_value)
         run.assert_called_once()
-        ioloop.assert_called_once()  # for the start
+        ioloop.call_count == 2  # one for the start, one for the stop
         assert CLIENT_LOGGER.getEffectiveLevel() == logging.ERROR
 
     @mock.patch('iotlabwebsocket.client_cli.setup_client_logger')
@@ -78,7 +78,7 @@ class ClientCliTest(unittest.TestCase):
         args = ['--debug']
         main(args)
 
-        ioloop.assert_called_once()  # for the start
+        ioloop.call_count == 2  # one for the start, one for the stop
         setup_logger.assert_called_once()
 
     def test_main_client_exit(self, ioloop, init, run, fetch):
@@ -87,7 +87,7 @@ class ClientCliTest(unittest.TestCase):
         args = []
         main(args)
 
-        ioloop.assert_called_once()  # for the stop
+        ioloop.assert_called_once()  # once for the stop
 
 
 def test_invalid_node(capsys):
