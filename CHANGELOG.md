@@ -1,6 +1,13 @@
 Changelog
 =========
 
+Version 0.2.0
+-------------
+
++ Fix compatibility issues with Javascript websocket client
++ Improve API class
++ Add tests for API class and logger
+
 Version 0.1.1
 -------------
 
