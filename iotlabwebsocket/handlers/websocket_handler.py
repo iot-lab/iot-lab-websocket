@@ -16,7 +16,7 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
         self.site, self.experiment_id, self.node, self.type = \
             path.split('/')[-4:]
         msg = None
-	if self.type == 'ssh' and not self.node.startswith('node-'):
+        if self.type == 'ssh' and not self.node.startswith('a8-'):
             msg = "ssh not allowed on node '{}'".format(self.node)
 
         if msg is not None:
@@ -94,8 +94,9 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
 
         LOGGER.info("Websocket connection request")
 
-        # Check path is always True
-        self._check_path()
+        # Check path is correct
+        if not self._check_path():
+            return
 
         # Verify token provided in subprotocols, since there's an asynchronous
         # call to the API, we wait for it to complete.

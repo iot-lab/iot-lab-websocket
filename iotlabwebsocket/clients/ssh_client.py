@@ -31,7 +31,10 @@ class SSHClient(object):
         self._ssh = paramiko.SSHClient()
         try:
             self._ssh.load_system_host_keys()
-            self._ssh.connect(hostname=self.host, username=self.username)
+            host = self.host
+            if host.startswith('a8'):
+                host = 'node-a8-{}'.format(host.split('-')[-1])
+            self._ssh.connect(hostname=host, username=self.username)
             self._channel = self._ssh.get_transport().open_session()
             self._channel.get_pty()
             self._channel.invoke_shell()
