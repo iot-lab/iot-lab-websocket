@@ -30,7 +30,7 @@ class SSHClient(object):
         LOGGER.debug("Connect to host %s via SSH", self.host)
         self._ssh = paramiko.SSHClient()
         try:
-            self._ssh.load_system_host_keys()
+            self._ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             host = self.host
             if host.startswith('a8'):
                 host = 'node-a8-{}'.format(host.split('-')[-1])
