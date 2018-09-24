@@ -1,9 +1,11 @@
 # IoT-LAB websocket tools
 
-This application provides a redirection mecanism between the TCP server
-connected to the serial port of an IoT-LAB node to websockets clients.
+[![Build Status](https://ci.inria.fr/iot-lab/job/iot-lab-websocket/badge/icon)](https://ci.inria.fr/iot-lab/job/iot-lab-websocket/)
 
-The websocket clients can be started from a web page so this application
+This application provides a redirection mecanism between the TCP server
+running on an IoT-LAB node to websockets clients.
+
+The websocket clients can be started from a web page thus this application
 allows interacting with the serial port of an IoT-LAB node from a browser.
 
 The application supports Python 2.7 and 3.5 minimum.
