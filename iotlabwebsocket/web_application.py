@@ -49,8 +49,8 @@ class WebApplication(tornado.web.Application):
             tcp_client.send(data.encode())
         else:
             LOGGER.debug("No TCP connection opened, skipping message")
-            websocket.write_data("No TCP connection opened, cannot send "
-                                 "message '{}'.\n".format(data))
+            websocket.write_message("No TCP connection opened, cannot send "
+                                    "message '{}'.\n".format(data))
 
     def handle_websocket_close(self, websocket):
         """Handle the disconnection of a websocket."""

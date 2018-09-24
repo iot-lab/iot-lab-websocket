@@ -11,25 +11,16 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
     """Class that manage websocket connections."""
 
     def _check_path(self):
-        # Check path is correct
+        # Check path is always correct
         path = self.request.path
         self.site, self.experiment_id, self.node = path.split('/')[-4:-1]
-        msg = None
-        if not self.experiment_id or not self.node:
-            msg = "invalid url: {}".format(path)
-
-        if msg is not None:
-            LOGGER.warning("Reject websocket connection: %s", msg)
-            self.set_status(404)  # Not found
-            self.finish(msg)
-            return False
         return True
 
     def select_subprotocol(self, subprotocols):
         """Only accept the 'token' subprotocol"""
         if "token" in subprotocols:
             return "token"
-        return None
+        return None  # pragma: no cover
 
     @gen.coroutine
     def _check_token(self):
@@ -94,9 +85,8 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
 
         LOGGER.info("Websocket connection request")
 
-        # Check path is correct
-        if not self._check_path():
-            return
+        # Check path is always True
+        self._check_path()
 
         # Verify token provided in subprotocols, since there's an asynchronous
         # call to the API, we wait for it to complete.
@@ -117,7 +107,7 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
 
     def check_origin(self, origin):
         """Allow connections from anywhere."""
-        return True
+        return True  # pragma: no cover
 
     @gen.coroutine
     def open(self):

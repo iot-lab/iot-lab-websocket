@@ -9,6 +9,10 @@ from ..logger import LOGGER
 NODES = {'nodes': ['localhost.local']}
 
 
+def _nodes():
+    return json.dumps(NODES)
+
+
 class HttpApiRequestHandler(web.RequestHandler):
     # pylint:disable=abstract-method,arguments-differ
     """Class that handle HTTP token requests."""
@@ -41,7 +45,7 @@ class HttpApiRequestHandler(web.RequestHandler):
             LOGGER.debug("Internal token: '%s'", self.token)
             self.write(json.dumps({"token": self.token}))
         elif not resource:
-            self.write(json.dumps(NODES))
+            self.write(_nodes())
         else:
             self.set_status(404)
             self.finish("Invalid resource '{}'".format(resource))
