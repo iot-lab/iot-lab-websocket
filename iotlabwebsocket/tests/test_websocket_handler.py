@@ -53,6 +53,13 @@ class TestWebsocketHandler(AsyncHTTPTestCase):
             assert args[1] == data
             ws_handler = args[0]
 
+            # Check some websocket handler internal methods (just for coverage)
+            assert ws_handler.check_origin("http://localhost") is True
+            assert ws_handler.check_origin(
+                "https://devwww.iot-lab.info") is True
+            assert ws_handler.select_subprotocol(['test', '']) is None
+            assert ws_handler.select_subprotocol(['token', 'aaaa']) == 'token'
+
         with patch('iotlabwebsocket.web_application'
                    '.WebApplication.handle_websocket_close') as ws_close:
             connection.close()

@@ -20,7 +20,7 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
         """Only accept the 'token' subprotocol"""
         if "token" in subprotocols:
             return "token"
-        return None  # pragma: no cover
+        return None
 
     @gen.coroutine
     def _check_token(self):
@@ -107,7 +107,7 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
 
     def check_origin(self, origin):
         """Allow connections from anywhere."""
-        return True  # pragma: no cover
+        return True
 
     @gen.coroutine
     def open(self):
