@@ -62,6 +62,7 @@ class WebApplication(tornado.web.Application):
         if tcp_client.ready and not self.websockets[node]:
             LOGGER.debug("Closing TCP connection to node '%s'", node)
             tcp_client.stop()
+            self.tcp_clients.pop(node)
             del tcp_client
 
     def handle_tcp_data(self, node, data):
