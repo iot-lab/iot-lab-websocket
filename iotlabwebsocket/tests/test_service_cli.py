@@ -1,5 +1,6 @@
 """iotlabwebsocket service cli tests."""
 
+import os
 import os.path
 import sys
 import tempfile
@@ -86,3 +87,30 @@ class ServiceCliTest(unittest.TestCase):
         main(args)
 
         ioloop.assert_called_once()  # for the stop
+
+    def test_main_service_env(self, ioloop, init, listen, stop_app):
+        init.return_value = None
+        api_host_test = 'testhost'
+        api_port_test = '8080'
+        username = 'aaaa'
+        password = 'bbbb'
+        api_test = ApiClient('https', api_host_test, api_port_test,
+                             username, password)
+        port_test = '8082'
+        token_test = 'test_token'
+        args = ['--api-host', api_host_test, '--api-port', api_port_test,
+                '--use-local-api', '--token', token_test, '--port', port_test]
+        os.environ['USERNAME'] = username
+        os.environ['PASSWORD'] = password
+        main(args)
+
+        # Cleanup
+        os.environ.pop('USERNAME')
+        os.environ.pop('PASSWORD')
+
+        ioloop.assert_called_once()  # for the start
+        args, kwargs = init.call_args
+        assert len(args) == 1
+        assert args[0] == api_test
+        assert kwargs == dict(use_local_api=True, token=token_test)
+        listen.assert_called_with(port_test)

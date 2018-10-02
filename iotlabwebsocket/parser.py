@@ -1,5 +1,6 @@
 """Manage command line parsers."""
 
+import os
 import argparse
 
 from . import (DEFAULT_APPLICATION_HOST, DEFAULT_APPLICATION_PORT,
@@ -21,9 +22,11 @@ def common_parser(description):
                         help="REST API server host")
     parser.add_argument('--api-port', type=str, default=DEFAULT_API_PORT,
                         help="REST API server port")
-    parser.add_argument('--api-user', type=str, default="",
+    parser.add_argument('--api-user', type=str,
+                        default=os.getenv('USERNAME', ''),
                         help="username used to connect to the REST API")
-    parser.add_argument('--api-password', type=str, default="",
+    parser.add_argument('--api-password', type=str,
+                        default=os.getenv('PASSWORD', ''),
                         help="password used to connect to the REST API")
     return parser
 
