@@ -44,7 +44,7 @@ class TestWebApplication(AsyncHTTPTestCase):
         super(TestWebApplication, self).setUp()
         self.api.port = self.get_http_port()
 
-        assert len(self.application.websockets) == 0
+        assert len(self.application.serial_websockets) == 0
 
     @mock.patch('iotlabwebsocket.clients.tcp_client.TCPClient.send')
     @mock.patch('iotlabwebsocket.clients.tcp_client.TCPClient.stop')
@@ -59,7 +59,7 @@ class TestWebApplication(AsyncHTTPTestCase):
         websocket = yield tornado.websocket.websocket_connect(
             url, subprotocols=['token', 'token'])
 
-        assert len(self.application.websockets['node-1']) == 1
+        assert len(self.application.serial_websockets['node-1']) == 1
 
         start.assert_called_once()
         args, kwargs = start.call_args
@@ -79,7 +79,7 @@ class TestWebApplication(AsyncHTTPTestCase):
             url, subprotocols=['token', 'token'])
 
         assert start.call_count == 0
-        assert len(self.application.websockets['node-1']) == 2
+        assert len(self.application.serial_websockets['node-1']) == 2
 
         websocket2.close()
         yield gen.sleep(0.1)
@@ -87,7 +87,7 @@ class TestWebApplication(AsyncHTTPTestCase):
         # There's still a websocket connection opened, so TCP client is not
         # closed
         assert stop.call_count == 0
-        assert len(self.application.websockets['node-1']) == 1
+        assert len(self.application.serial_websockets['node-1']) == 1
 
         # Send some data
         websocket.write_message("test")
@@ -101,7 +101,7 @@ class TestWebApplication(AsyncHTTPTestCase):
         yield gen.sleep(0.1)
 
         assert stop.call_count == 1
-        assert len(self.application.websockets['node-1']) == 0
+        assert len(self.application.serial_websockets['node-1']) == 0
         assert 'node-1' not in self.application.tcp_clients
 
     @mock.patch('iotlabwebsocket.handlers.http_handler._nodes')
@@ -119,14 +119,14 @@ class TestWebApplication(AsyncHTTPTestCase):
         websocket = yield tornado.websocket.websocket_connect(
             url, subprotocols=['token', 'token'])
 
-        assert len(self.application.websockets['localhost']) == 1
+        assert len(self.application.serial_websockets['localhost']) == 1
 
         # Leave some time for the TCP connection to be ready
         yield gen.sleep(0.1)
         assert self.application.tcp_clients['localhost'].ready
 
         # Send some data
-        websocket_srv = self.application.websockets['localhost'][0]
+        websocket_srv = self.application.serial_websockets['localhost'][0]
         websocket_srv.write_message = mock.Mock()
         yield server.stream.write(b"test")
 
@@ -149,7 +149,7 @@ class TestWebApplication(AsyncHTTPTestCase):
         yield gen.sleep(0.1)
 
         assert not self.application.tcp_clients['localhost'].ready
-        assert len(self.application.websockets['node-1']) == 0
+        assert len(self.application.serial_websockets['node-1']) == 0
 
     @mock.patch('iotlabwebsocket.handlers.http_handler._nodes')
     @gen_test
@@ -167,8 +167,8 @@ class TestWebApplication(AsyncHTTPTestCase):
             _ = yield tornado.websocket.websocket_connect(
                 url, subprotocols=['token', 'token'])
 
-        assert len(self.application.websockets['localhost']) == 10
+        assert len(self.application.serial_websockets['localhost']) == 10
 
         self.application.stop()
         yield gen.sleep(0.1)
-        assert len(self.application.websockets['localhost']) == 0
+        assert len(self.application.serial_websockets['localhost']) == 0
