@@ -86,3 +86,23 @@ class TestWebApplication(AsyncHTTPTestCase):
         assert stop.call_count == 1
         assert len(self.application.websockets['node-1']) == 0
         assert 'node-1' not in self.application.tcp_clients
+
+
+    @patch('iotlabwebsocket.handlers.http_handler._nodes')
+    @gen_test
+    def test_tcp_connection_close(self, nodes, start, stop, send):
+        url = ('ws://localhost:{}/ws/local/123/node-1/serial'
+               .format(self.api.port))
+        nodes.return_value = json.dumps({'nodes': ['node-1.local']})
+
+        websocket = yield tornado.websocket.websocket_connect(
+            url, subprotocols=['token', 'token'])
+
+        assert len(self.application.websockets['node-1']) == 1
+         # Forcing TCP client to be ready, just for the test
+        self.application.tcp_clients['node-1'].ready = True
+
+        # Force a TCP close
+        self.application.tcp_clients['node-1'].on_close('node-1')
+
+        assert len(self.application.websockets['node-1']) == 0
