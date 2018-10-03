@@ -4,20 +4,34 @@ import json
 
 import pytest
 
-from mock import patch
+import mock
 
 import tornado
 from tornado import gen
-from tornado.testing import AsyncHTTPTestCase, gen_test
+from tornado.tcpserver import TCPServer
+from tornado.iostream import StreamClosedError
+from tornado.testing import AsyncHTTPTestCase, gen_test, bind_unused_port
 
 from iotlabwebsocket.api import ApiClient
 from iotlabwebsocket.web_application import WebApplication
 from iotlabwebsocket.handlers.websocket_handler import WebsocketClientHandler
+from iotlabwebsocket.clients.tcp_client import NODE_TCP_PORT
 
 
-@patch('iotlabwebsocket.clients.tcp_client.TCPClient.send')
-@patch('iotlabwebsocket.clients.tcp_client.TCPClient.stop')
-@patch('iotlabwebsocket.clients.tcp_client.TCPClient.start')
+class TCPServerStub(TCPServer):
+
+    stream = None
+
+    @gen.coroutine
+    def handle_stream(self, stream, address):
+        self.stream = stream
+        while True:
+            try:
+                yield self.stream.read_bytes(1)
+            except StreamClosedError:
+                break
+
+
 class TestWebApplication(AsyncHTTPTestCase):
 
     def get_app(self):
@@ -32,9 +46,12 @@ class TestWebApplication(AsyncHTTPTestCase):
 
         assert len(self.application.websockets) == 0
 
-    @patch('iotlabwebsocket.handlers.http_handler._nodes')
+    @mock.patch('iotlabwebsocket.clients.tcp_client.TCPClient.send')
+    @mock.patch('iotlabwebsocket.clients.tcp_client.TCPClient.stop')
+    @mock.patch('iotlabwebsocket.clients.tcp_client.TCPClient.start')
+    @mock.patch('iotlabwebsocket.handlers.http_handler._nodes')
     @gen_test
-    def test_tcp_connections(self, nodes, start, stop, send):
+    def test_tcp_connections_unit(self, nodes, start, stop, send):
         url = ('ws://localhost:{}/ws/local/123/node-1/serial'
                .format(self.api.port))
         nodes.return_value = json.dumps({'nodes': ['node-1.local']})
@@ -87,22 +104,71 @@ class TestWebApplication(AsyncHTTPTestCase):
         assert len(self.application.websockets['node-1']) == 0
         assert 'node-1' not in self.application.tcp_clients
 
-
-    @patch('iotlabwebsocket.handlers.http_handler._nodes')
+    @mock.patch('iotlabwebsocket.handlers.http_handler._nodes')
     @gen_test
-    def test_tcp_connection_close(self, nodes, start, stop, send):
-        url = ('ws://localhost:{}/ws/local/123/node-1/serial'
+    def test_tcp_connection_server(self, nodes):
+        url = ('ws://localhost:{}/ws/local/123/localhost/serial'
                .format(self.api.port))
-        nodes.return_value = json.dumps({'nodes': ['node-1.local']})
+        nodes.return_value = json.dumps({'nodes': ['localhost.local']})
+
+        sock, _ = bind_unused_port()
+        server = TCPServerStub()
+        server.add_socket(sock)
+        server.listen(NODE_TCP_PORT)
 
         websocket = yield tornado.websocket.websocket_connect(
             url, subprotocols=['token', 'token'])
 
-        assert len(self.application.websockets['node-1']) == 1
-         # Forcing TCP client to be ready, just for the test
-        self.application.tcp_clients['node-1'].ready = True
+        assert len(self.application.websockets['localhost']) == 1
 
-        # Force a TCP close
-        self.application.tcp_clients['node-1'].on_close('node-1')
+        # Leave some time for the TCP connection to be ready
+        yield gen.sleep(0.1)
+        assert self.application.tcp_clients['localhost'].ready
 
+        # Send some data
+        websocket_srv = self.application.websockets['localhost'][0]
+        websocket_srv.write_message = mock.Mock()
+        yield server.stream.write(b"test")
+
+        yield gen.sleep(0.1)
+        assert websocket_srv.write_message.call_count == len("test")
+        websocket_srv.write_message.call_count = 0
+
+        # Smoke test to check that the websocket gets a message when the TCP
+        # connection is not opened yet
+        self.application.tcp_clients['localhost'].ready = False
+        websocket.write_message(b'test')
+        yield gen.sleep(0.1)
+        websocket_srv.write_message.assert_called_with(
+            "No TCP connection opened, cannot send message 'test'.\n")
+        self.application.tcp_clients['localhost'].ready = True
+
+        # Force close from TCP server, all websockets should be closed
+        # automatically and TCP client connection as well
+        server.stream.close()
+        yield gen.sleep(0.1)
+
+        assert not self.application.tcp_clients['localhost'].ready
         assert len(self.application.websockets['node-1']) == 0
+
+    @mock.patch('iotlabwebsocket.handlers.http_handler._nodes')
+    @gen_test
+    def test_application_stop(self, nodes):
+        url = ('ws://localhost:{}/ws/local/123/localhost/serial'
+               .format(self.api.port))
+        nodes.return_value = json.dumps({'nodes': ['localhost.local']})
+
+        sock, _ = bind_unused_port()
+        server = TCPServerStub()
+        server.add_socket(sock)
+        server.listen(NODE_TCP_PORT)
+
+        for _ in range(10):
+            _ = yield tornado.websocket.websocket_connect(
+                url, subprotocols=['token', 'token'])
+
+        assert len(self.application.websockets['localhost']) == 10
+
+        self.application.stop()
+        yield gen.sleep(0.1)
+        assert len(self.application.websockets['localhost']) == 0
