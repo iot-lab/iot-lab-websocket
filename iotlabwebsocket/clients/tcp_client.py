@@ -53,6 +53,7 @@ class TCPClient(object):
             # We can't connect to the node with TCP, closing all websockets
             self.stop()
             return
+        LOGGER.debug("TCP connection is ready")
         self.ready = True
         self._read_stream()
 
