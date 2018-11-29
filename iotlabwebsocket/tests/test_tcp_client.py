@@ -55,14 +55,14 @@ class NodeHandlerTest(AsyncTestCase):
         server.stream.write(message)
         yield gen.sleep(0.01)
         on_data.assert_called_once()
-        on_data.assert_called_with("localhost", message)
+        on_data.assert_called_with("localhost", message.decode())
         on_data.call_count = 0
 
         message = b"a" * CHUNK_SIZE
         server.stream.write(message)
         yield gen.sleep(0.01)
         on_data.assert_called_once()
-        on_data.assert_called_with("localhost", message)
+        on_data.assert_called_with("localhost", message.decode())
         on_data.call_count = 0
 
         message = b"a" * (CHUNK_SIZE + 1)
