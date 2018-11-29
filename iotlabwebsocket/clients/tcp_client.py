@@ -8,6 +8,7 @@ from tornado.iostream import StreamClosedError
 from ..logger import LOGGER
 
 NODE_TCP_PORT = 20000
+CHUNK_SIZE = 1024
 
 
 class TCPClient(object):
@@ -63,7 +64,7 @@ class TCPClient(object):
                      self.node, NODE_TCP_PORT)
         try:
             while True:
-                data = yield self._tcp.read_bytes(1)
+                data = yield self._tcp.read_bytes(CHUNK_SIZE, partial=True)
                 try:
                     data_decoded = data.decode()
                 except UnicodeDecodeError:

@@ -11,7 +11,8 @@ from tornado import gen
 
 from tornado.testing import AsyncTestCase, gen_test, bind_unused_port
 
-from iotlabwebsocket.clients.tcp_client import TCPClient, NODE_TCP_PORT
+from iotlabwebsocket.clients.tcp_client import (TCPClient, NODE_TCP_PORT,
+                                                CHUNK_SIZE)
 
 
 class TCPServerStub(TCPServer):
@@ -50,10 +51,24 @@ class NodeHandlerTest(AsyncTestCase):
         assert client.node == "localhost"
 
         # String is sent via websocket character by character
-        message = b"Hello World"
+        message = b"Hello\nWorld"
         server.stream.write(message)
         yield gen.sleep(0.01)
-        assert on_data.call_count == len(message)
+        on_data.assert_called_once()
+        on_data.assert_called_with("localhost", message)
+        on_data.call_count = 0
+
+        message = b"a" * CHUNK_SIZE
+        server.stream.write(message)
+        yield gen.sleep(0.01)
+        on_data.assert_called_once()
+        on_data.assert_called_with("localhost", message)
+        on_data.call_count = 0
+
+        message = b"a" * (CHUNK_SIZE + 1)
+        server.stream.write(message)
+        yield gen.sleep(0.01)
+        assert on_data.call_count == 2
         on_data.call_count = 0
 
         # Non unicode data are not sent to the connected websockets

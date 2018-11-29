@@ -131,7 +131,7 @@ class TestWebApplication(AsyncHTTPTestCase):
         yield server.stream.write(b"test")
 
         yield gen.sleep(0.1)
-        assert websocket_srv.write_message.call_count == len("test")
+        assert websocket_srv.write_message.call_count == 1
         websocket_srv.write_message.call_count = 0
 
         # Smoke test to check that the websocket gets a message when the TCP
