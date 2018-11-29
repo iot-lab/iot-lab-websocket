@@ -81,7 +81,7 @@ class TestWebApplication(AsyncHTTPTestCase):
         assert start.call_count == 0
         assert len(self.application.websockets['node-1']) == 2
 
-        websocket2.close()
+        websocket2.close(code=1234, reason="test reason")
         yield gen.sleep(0.1)
 
         # There's still a websocket connection opened, so TCP client is not
@@ -97,7 +97,7 @@ class TestWebApplication(AsyncHTTPTestCase):
         send.assert_called_with(b"test")
 
         # Close last websocket
-        websocket.close()
+        websocket.close(code=007, reason="Big Test")
         yield gen.sleep(0.1)
 
         assert stop.call_count == 1

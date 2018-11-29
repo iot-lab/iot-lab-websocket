@@ -126,5 +126,7 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
 
     def on_close(self):
         """Manage the disconnection of the websocket."""
-        LOGGER.info("Websocket connection closed for node '%s'", self.node)
+        LOGGER.info("Websocket connection closed for node '%s', code: %d, "
+                    "reason: '%s'",
+                    self.node, self.close_code, self.close_reason)
         self.application.handle_websocket_close(self)

@@ -73,10 +73,10 @@ class WebApplication(tornado.web.Application):
     def handle_tcp_close(self, node):
         """Close all websockets connected to a node when TCP is closed."""
         for websocket in self.websockets[node]:
-            websocket.close()
+            websocket.close(code=1000, reason="cannot connect the node")
 
     def stop(self):
         """Stop any pending websocket connection."""
         for websockets in self.websockets.values():
             for websocket in websockets:
-                websocket.close()
+                websocket.close(code=1001, reason="server is restarting")

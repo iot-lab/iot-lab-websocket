@@ -62,7 +62,7 @@ class TestWebsocketHandler(AsyncHTTPTestCase):
 
         with patch('iotlabwebsocket.web_application'
                    '.WebApplication.handle_websocket_close') as ws_close:
-            connection.close()
+            connection.close(code=1000, reason="client exit")
             yield gen.sleep(0.1)
             ws_close.assert_called_once()
             ws_close.assert_called_with(ws_handler)
