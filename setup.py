@@ -24,7 +24,7 @@ if __name__ == '__main__':
 
     setup(name=PACKAGE,
           version=get_version(PACKAGE),
-          description=('Provides tools to interact with IoT-LAB nodes from'
+          description=('Provides server exposing IoT-LAB nodes via'
                        'a websocket connection.'),
           long_description=readme('README.md'),
           author='IoT-LAB Team',
@@ -37,8 +37,6 @@ if __name__ == '__main__':
           scripts=[],
           entry_points={
               'console_scripts': [
-                  'iotlab-websocket-client = '
-                  'iotlabwebsocket.client_cli:main',
                   'iotlab-websocket-service = '
                   'iotlabwebsocket.service_cli:main',
               ],

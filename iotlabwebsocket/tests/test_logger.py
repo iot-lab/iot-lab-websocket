@@ -6,8 +6,7 @@ from logging.handlers import RotatingFileHandler
 
 import mock
 
-from iotlabwebsocket.logger import (setup_client_logger, setup_server_logger,
-                                    LOGGER, CLIENT_LOGGER)
+from iotlabwebsocket.logger import setup_server_logger, LOGGER
 
 
 def test_server_empty_logger():
@@ -39,18 +38,6 @@ def test_server_console_logger(capsys):
     logger = logging.getLogger("iotlabwebsocket")
     assert logger is LOGGER
     setup_server_logger(log_console=True)
-    assert len(logger.handlers) == 1
-    handler = logger.handlers[0]
-    assert isinstance(handler, logging.StreamHandler)
-    logger.removeHandler(handler)
-    assert len(logger.handlers) == 0
-
-
-def test_empty_client_logger():
-    logger = logging.getLogger("iotlabwebsocket-client")
-    assert logger is CLIENT_LOGGER
-    setup_client_logger()
-
     assert len(logger.handlers) == 1
     handler = logger.handlers[0]
     assert isinstance(handler, logging.StreamHandler)
