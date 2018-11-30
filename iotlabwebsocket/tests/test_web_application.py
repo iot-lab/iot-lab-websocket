@@ -97,7 +97,7 @@ class TestWebApplication(AsyncHTTPTestCase):
         send.assert_called_with(b"test")
 
         # Close last websocket
-        websocket.close(code=007, reason="Big Test")
+        websocket.close(code=5678, reason="Big Test")
         yield gen.sleep(0.1)
 
         assert stop.call_count == 1
