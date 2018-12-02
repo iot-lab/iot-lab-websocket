@@ -34,7 +34,7 @@ class TestWebsocketHandler(AsyncHTTPTestCase):
         nodes.return_value = json.dumps({'nodes': ['node-1.local']})
 
         connection = yield tornado.websocket.websocket_connect(
-            url, subprotocols=['token', 'token'])
+            url, subprotocols=['user', 'token', 'token'])
         assert connection.selected_subprotocol == 'token'
 
         # if handle_websocket_open is called, the connection have passed all
@@ -58,7 +58,9 @@ class TestWebsocketHandler(AsyncHTTPTestCase):
             assert ws_handler.check_origin(
                 "https://devwww.iot-lab.info") is True
             assert ws_handler.select_subprotocol(['test', '']) is None
-            assert ws_handler.select_subprotocol(['token', 'aaaa']) == 'token'
+            assert (ws_handler.select_subprotocol(['user', 'token', 'aaaa']) ==
+                    'token')
+            assert ws_handler.user == 'user'
 
         with patch('iotlabwebsocket.web_application'
                    '.WebApplication.handle_websocket_close') as ws_close:
@@ -84,13 +86,13 @@ class TestWebsocketHandler(AsyncHTTPTestCase):
 
         with pytest.raises(tornado.httpclient.HTTPClientError) as exc_info:
             _ = yield tornado.websocket.websocket_connect(
-                url, subprotocols=['token', 'invalid'])
+                url, subprotocols=['user', 'token', 'invalid'])
         assert "HTTP 401: Unauthorized" in str(exc_info)
         assert ws_open.call_count == 0
 
         with pytest.raises(tornado.httpclient.HTTPClientError) as exc_info:
             _ = yield tornado.websocket.websocket_connect(
-                url, subprotocols=['invalid', 'invalid'])
+                url, subprotocols=['user', 'invalid', 'invalid'])
         assert "HTTP 401: Unauthorized" in str(exc_info)
         assert ws_open.call_count == 0
 
@@ -101,7 +103,7 @@ class TestWebsocketHandler(AsyncHTTPTestCase):
 
         with pytest.raises(tornado.httpclient.HTTPClientError) as exc_info:
             _ = yield tornado.websocket.websocket_connect(
-                url, subprotocols=['token', 'token'])
+                url, subprotocols=['user', 'token', 'token'])
         assert "HTTP 401: Unauthorized" in str(exc_info)
         assert ws_open.call_count == 0
 
@@ -110,6 +112,6 @@ class TestWebsocketHandler(AsyncHTTPTestCase):
 
         with pytest.raises(tornado.httpclient.HTTPClientError) as exc_info:
             _ = yield tornado.websocket.websocket_connect(
-                url, subprotocols=['token', 'token'])
+                url, subprotocols=['user', 'token', 'token'])
         assert "HTTP 401: Unauthorized" in str(exc_info)
         assert ws_open.call_count == 0

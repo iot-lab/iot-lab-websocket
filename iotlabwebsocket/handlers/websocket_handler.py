@@ -23,16 +23,14 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
         return None
 
     @gen.coroutine
-    def _check_token(self):
-        subprotocols = self.request.headers.get(
-            "Sec-WebSocket-Protocol", "").split(',')
-        if len(subprotocols) != 2 or subprotocols[0].strip() != 'token':
+    def _check_subprotocols(self, subprotocols):
+        if len(subprotocols) != 3 or subprotocols[1].strip() != 'token':
             LOGGER.warning("Reject websocket connection: invalib subprotocol")
             self.set_status(401)  # Authentication failed
             self.finish("Invalid subprotocols")
             raise gen.Return(False)
 
-        req_token = subprotocols[1].strip()
+        req_token = subprotocols[2].strip()
 
         # Fetch the token from the authentication server
         api_token = yield self.api.fetch_token_async(self.experiment_id)
@@ -90,9 +88,13 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
 
         # Verify token provided in subprotocols, since there's an asynchronous
         # call to the API, we wait for it to complete.
-        token_valid = yield self._check_token()
-        if not token_valid:
+        subprotocols = self.request.headers.get(
+            "Sec-WebSocket-Protocol", "").split(',')
+        valid_subprotocols = yield self._check_subprotocols(subprotocols)
+        if not valid_subprotocols:
             return
+
+        self.user = subprotocols[0].strip()
 
         # Check that the requested node is in the experiment
         node_valid = yield self._check_node()

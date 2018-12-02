@@ -11,6 +11,7 @@ from .handlers.http_handler import HttpApiRequestHandler
 from .handlers.websocket_handler import WebsocketClientHandler
 
 MAX_WEBSOCKETS_PER_NODE = 2
+MAX_WEBSOCKETS_PER_USER = 10
 
 
 class WebApplication(tornado.web.Application):
@@ -31,12 +32,15 @@ class WebApplication(tornado.web.Application):
 
         self.tcp_clients = defaultdict(TCPClient)
         self.websockets = defaultdict(list)
+        self.user_connections = defaultdict(int)
 
         super(WebApplication, self).__init__(handlers, **settings)
 
     def handle_websocket_open(self, websocket):
         """Handle the websocket connection once authentified."""
         node = websocket.node
+        user = websocket.user
+        site = websocket.site
         tcp_client = self.tcp_clients[node]
         if not self.websockets[node]:
             # Open the tcp connection on first websocket connection.
@@ -47,7 +51,14 @@ class WebApplication(tornado.web.Application):
                 code=1000,
                 reason=("Cannot open more than {} connections to node {}."
                         .format(MAX_WEBSOCKETS_PER_NODE, node)))
+        elif self.user_connections[user] == MAX_WEBSOCKETS_PER_USER:
+            websocket.close(
+                code=1000,
+                reason=("Max number of connections ({}) reached for user {} "
+                        "on site {}."
+                        .format(MAX_WEBSOCKETS_PER_USER, user, site)))
         else:
+            self.user_connections[user] += 1
             self.websockets[node].append(websocket)
 
     def handle_websocket_data(self, websocket, data):
@@ -63,9 +74,12 @@ class WebApplication(tornado.web.Application):
     def handle_websocket_close(self, websocket):
         """Handle the disconnection of a websocket."""
         node = websocket.node
+        user = websocket.user
         tcp_client = self.tcp_clients[node]
         if websocket in self.websockets[node]:
             self.websockets[node].remove(websocket)
+        if self.user_connections[user] > 0:
+            self.user_connections[user] -= 1
 
         # websockets list is now empty for given node, closing tcp connection.
         if tcp_client.ready and not self.websockets[node]:
