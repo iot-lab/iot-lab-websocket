@@ -10,6 +10,8 @@ from .clients.tcp_client import TCPClient
 from .handlers.http_handler import HttpApiRequestHandler
 from .handlers.websocket_handler import WebsocketClientHandler
 
+MAX_WEBSOCKETS_PER_NODE = 2
+
 
 class WebApplication(tornado.web.Application):
     """IoT-LAB websocket to tcp redirector."""
@@ -40,7 +42,13 @@ class WebApplication(tornado.web.Application):
             # Open the tcp connection on first websocket connection.
             tcp_client.start(node, on_data=self.handle_tcp_data,
                              on_close=self.handle_tcp_close)
-        self.websockets[node].append(websocket)
+        if len(self.websockets[node]) == MAX_WEBSOCKETS_PER_NODE:
+            websocket.close(
+                code=1000,
+                reason=("Cannot open more than {} connections to node {}."
+                        .format(MAX_WEBSOCKETS_PER_NODE, node)))
+        else:
+            self.websockets[node].append(websocket)
 
     def handle_websocket_data(self, websocket, data):
         """Handle a message coming from a websocket."""
@@ -56,7 +64,8 @@ class WebApplication(tornado.web.Application):
         """Handle the disconnection of a websocket."""
         node = websocket.node
         tcp_client = self.tcp_clients[node]
-        self.websockets[node].remove(websocket)
+        if websocket in self.websockets[node]:
+            self.websockets[node].remove(websocket)
 
         # websockets list is now empty for given node, closing tcp connection.
         if tcp_client.ready and not self.websockets[node]:
@@ -70,10 +79,10 @@ class WebApplication(tornado.web.Application):
         for websocket in self.websockets[node]:
             websocket.write_message(data)
 
-    def handle_tcp_close(self, node):
+    def handle_tcp_close(self, node, reason="Cannot connect"):
         """Close all websockets connected to a node when TCP is closed."""
         for websocket in self.websockets[node]:
-            websocket.close(code=1000, reason="cannot connect the node")
+            websocket.close(code=1000, reason=reason)
 
     def stop(self):
         """Stop any pending websocket connection."""

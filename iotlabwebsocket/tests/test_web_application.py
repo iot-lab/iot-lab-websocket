@@ -13,7 +13,8 @@ from tornado.iostream import StreamClosedError
 from tornado.testing import AsyncHTTPTestCase, gen_test, bind_unused_port
 
 from iotlabwebsocket.api import ApiClient
-from iotlabwebsocket.web_application import WebApplication
+from iotlabwebsocket.web_application import (WebApplication,
+                                             MAX_WEBSOCKETS_PER_NODE)
 from iotlabwebsocket.handlers.websocket_handler import WebsocketClientHandler
 from iotlabwebsocket.clients.tcp_client import NODE_TCP_PORT
 
@@ -167,7 +168,8 @@ class TestWebApplication(AsyncHTTPTestCase):
             _ = yield tornado.websocket.websocket_connect(
                 url, subprotocols=['token', 'token'])
 
-        assert len(self.application.websockets['localhost']) == 10
+        assert (len(self.application.websockets['localhost']) ==
+                MAX_WEBSOCKETS_PER_NODE)
 
         self.application.stop()
         yield gen.sleep(0.1)
