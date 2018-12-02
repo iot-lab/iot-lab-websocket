@@ -12,7 +12,8 @@ from tornado import gen
 from tornado.testing import AsyncTestCase, gen_test, bind_unused_port
 
 from iotlabwebsocket.clients.tcp_client import (TCPClient, NODE_TCP_PORT,
-                                                CHUNK_SIZE)
+                                                CHUNK_SIZE,
+                                                MAX_BYTES_RECEIVED_PER_PERIOD)
 
 
 class TCPServerStub(TCPServer):
@@ -103,6 +104,34 @@ class NodeHandlerTest(AsyncTestCase):
         yield gen.sleep(0.01)
         on_close.assert_called_once()
         assert not client.ready
+
+    @gen_test
+    def test_tcp_too_fast(self):
+        client = TCPClient()
+
+        sock, _ = bind_unused_port()
+        server = TCPServerStub()
+        server.add_socket(sock)
+        server.listen(NODE_TCP_PORT)
+
+        on_close = mock.Mock()
+        on_data = mock.Mock()
+
+        # Connect to the TCP server stub
+        yield client.start("localhost", on_data, on_close)
+        assert client.ready
+        assert client.node == "localhost"
+
+        # String is sent via websocket character by character
+        message = b"A" * MAX_BYTES_RECEIVED_PER_PERIOD
+        server.stream.write(message)
+        yield gen.sleep(0.01)
+        assert (on_data.call_count ==
+                (MAX_BYTES_RECEIVED_PER_PERIOD / CHUNK_SIZE) + 1)
+        yield gen.sleep(1)
+        server.stream.write("Too fast")
+        yield gen.sleep(0.01)
+        on_close.assert_called_once()
 
     @gen_test
     def test_tcp_failed_connection(self):
