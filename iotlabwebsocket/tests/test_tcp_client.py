@@ -2,6 +2,7 @@
 
 import sys
 import unittest
+import math
 
 import mock
 
@@ -127,9 +128,9 @@ class NodeHandlerTest(AsyncTestCase):
         server.stream.write(message)
         yield gen.sleep(0.01)
         assert (on_data.call_count ==
-                (MAX_BYTES_RECEIVED_PER_PERIOD / CHUNK_SIZE) + 1)
+                (math.floor(MAX_BYTES_RECEIVED_PER_PERIOD / CHUNK_SIZE)) + 1)
         yield gen.sleep(1)
-        server.stream.write("Too fast")
+        server.stream.write(b"Too fast")
         yield gen.sleep(0.01)
         on_close.assert_called_once()
 
