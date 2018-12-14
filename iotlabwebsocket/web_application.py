@@ -65,13 +65,13 @@ class WebApplication(tornado.web.Application):
             self.serial_websockets[node].append(websocket)
 
     @gen.coroutine
-    def _websocket_ssh_open(self, websocket, node):
+    def _websocket_ssh_open(self, websocket, user, site, node):
         ssh_client = SSHClient(node, on_data=self.handle_ssh_data,
                                on_close=self.handle_ssh_close)
         started = yield ssh_client.start()
         if not started:
             websocket.close(code=1001,
-			    reason="Cannot connect to node{}".format(node))
+                            reason="Cannot connect to node{}".format(node))
             return
         if self.user_connections[user] == MAX_WEBSOCKETS_PER_USER:
             websocket.close(
@@ -126,7 +126,8 @@ class WebApplication(tornado.web.Application):
 
     def _websocket_serial_close(self, websocket, node):
         tcp_client = self.tcp_clients[node]
-        self.serial_websockets[node].remove(websocket)
+        if websocket in self.serial_websockets[node]:
+            self.serial_websockets[node].remove(websocket)
 
         # websockets list is now empty for given node, closing tcp connection.
         if tcp_client.ready and not self.serial_websockets[node]:
@@ -146,11 +147,10 @@ class WebApplication(tornado.web.Application):
         if ssh_client in self.ssh_websockets:
             self.ssh_websockets.pop(ssh_client)
 
-    def handle_websocket_close(self, websocket, client_type='serial):
+    def handle_websocket_close(self, websocket, client_type='serial'):
         """Handle the disconnection of a websocket."""
         node = websocket.node
         user = websocket.user
-        tcp_client = self.tcp_clients[node]
         if client_type == "serial":
             self._websocket_serial_close(websocket, node)
         elif client_type == "ssh":
@@ -178,15 +178,17 @@ class WebApplication(tornado.web.Application):
 
     def handle_ssh_close(self, client):
         """Close the websocket connected when the attached SSH is closed."""
-        self.ssh_websockets[client].close(code=1000,
-                                          reason="Connection to {} is closed".format(node))
+        self.ssh_websockets[client].close(
+            code=1000, reason="Connection to {} is closed".format(client.host))
 
     def stop(self):
         # pylint:disable=undefined-loop-variable
         """Stop any pending websocket connection."""
+        reason = "server is restarting"
+        code = 1001
         for websockets in self.serial_websockets.values():
             for websocket in websockets:
-                websocket.close(code=1001, reason="server is restarting")
+                websocket.close(code=code, reason=reason)
 
         for websockets in self.ssh_websockets.values():
-            websocket.close(code=1001, reason="server is restarting")
+            websocket.close(code=code, reason=reason)

@@ -60,7 +60,7 @@ class TestWebsocketHandler(AsyncHTTPTestCase):
 
         with patch('iotlabwebsocket.web_application'
                    '.WebApplication.handle_websocket_close') as ws_close:
-            connection.close()
+            connection.close(code=1234, reason='test')
             yield gen.sleep(0.1)
             ws_close.assert_called_once()
             args, _ = ws_close.call_args
@@ -76,7 +76,7 @@ class TestWebsocketHandler(AsyncHTTPTestCase):
         nodes.return_value = json.dumps({'nodes': ['a8-1.local']})
 
         connection = yield tornado.websocket.websocket_connect(
-            url, subprotocols=['token', 'token'])
+            url, subprotocols=['user', 'token', 'token'])
         assert connection.selected_subprotocol == 'token'
 
         # if handle_websocket_open is called, the connection have passed all

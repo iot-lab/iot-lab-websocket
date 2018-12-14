@@ -59,7 +59,7 @@ class TestWebApplication(AsyncHTTPTestCase):
         nodes.return_value = json.dumps({'nodes': ['node-1.local']})
 
         websocket = yield tornado.websocket.websocket_connect(
-            url, subprotocols=['token', 'token'])
+            url, subprotocols=['user', 'token', 'token'])
 
         assert len(self.application.serial_websockets['node-1']) == 1
         assert self.application.serial_websockets['node-1'][0].user == 'user'
@@ -80,7 +80,7 @@ class TestWebApplication(AsyncHTTPTestCase):
         # TCP connection
         start.call_count = 0
         websocket2 = yield tornado.websocket.websocket_connect(
-            url, subprotocols=['token', 'token'])
+            url, subprotocols=['user', 'token', 'token'])
 
         assert start.call_count == 0
         assert len(self.application.serial_websockets['node-1']) == 2
