@@ -70,7 +70,7 @@ class TCPClient(object):
             while True:
                 data = yield self._tcp.read_bytes(CHUNK_SIZE, partial=True)
                 try:
-                    data_decoded = data.decode()
+                    data_decoded = data.decode('utf-8')
                 except UnicodeDecodeError:
                     LOGGER.warning("Cannot decode data received via TCP.")
                     continue

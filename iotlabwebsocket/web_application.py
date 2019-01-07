@@ -65,7 +65,7 @@ class WebApplication(tornado.web.Application):
         """Handle a message coming from a websocket."""
         tcp_client = self.tcp_clients[websocket.node]
         if tcp_client.ready:
-            tcp_client.send(data.encode())
+            tcp_client.send(data.encode('utf-8'))
         else:
             LOGGER.debug("No TCP connection opened, skipping message")
             websocket.write_message("No TCP connection opened, cannot send "
