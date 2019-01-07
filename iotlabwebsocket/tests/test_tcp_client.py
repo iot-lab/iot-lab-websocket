@@ -1,4 +1,5 @@
 """iotlabwebsocket tcp client tests."""
+# -*- coding: utf-8 -*-
 
 import sys
 import unittest
@@ -78,11 +79,20 @@ class NodeHandlerTest(AsyncTestCase):
         server.stream.write(message)
         yield gen.sleep(0.01)
         assert on_data.call_count == 0
+        assert not server.received
 
         # Data sent by the node_handler should be received by the TCPServer:
-        assert not server.received
         client.send(b'test')
         yield gen.sleep(0.01)
+        on_data.call_count == 1
+        assert server.received
+
+        # Sending unicode character works
+        on_data.call_count = 0
+        server.received = False
+        client.send(b'éééààà°°°°')
+        yield gen.sleep(0.01)
+        on_data.call_count == 1
         assert server.received
 
         # Sending from the node handler without an opened connection has
