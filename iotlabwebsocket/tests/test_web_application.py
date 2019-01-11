@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import json
+import sys
 
 import pytest
 
@@ -136,7 +137,10 @@ class TestWebApplication(AsyncHTTPTestCase):
         # Send some data
         websocket_srv = self.application.websockets['localhost'][0]
         websocket_srv.write_message = mock.Mock()
-        yield server.stream.write(b"test°°°ééààà")
+        message = 'test°°°ééààà'
+        if sys.version_info[0] > 2:
+            message = message.encode('utf-8')
+        yield server.stream.write(message)
 
         yield gen.sleep(0.1)
         assert websocket_srv.write_message.call_count == 1

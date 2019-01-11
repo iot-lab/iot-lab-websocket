@@ -90,7 +90,10 @@ class NodeHandlerTest(AsyncTestCase):
         # Sending unicode character works
         on_data.call_count = 0
         server.received = False
-        client.send(b'éééààà°°°°')
+        message = 'éééààà°°°°'
+        if sys.version_info[0] > 2:
+            message = message.encode('utf-8')
+        client.send(message)
         yield gen.sleep(0.01)
         on_data.call_count == 1
         assert server.received
