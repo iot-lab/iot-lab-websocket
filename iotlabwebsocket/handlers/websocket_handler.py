@@ -102,7 +102,7 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
             return
 
         # Let parent class correctly configure the websocket connection
-        super(WebsocketClientHandler, self).get(*args, **kwargs)
+        yield super(WebsocketClientHandler, self).get(*args, **kwargs)
 
         LOGGER.info("Websocket connection for experiment '%s' on node '%s'",
                     self.experiment_id, self.node)
