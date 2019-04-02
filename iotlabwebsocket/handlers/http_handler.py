@@ -17,6 +17,8 @@ class HttpApiRequestHandler(web.RequestHandler):
     # pylint:disable=abstract-method,arguments-differ
     """Class that handle HTTP token requests."""
 
+    token = None
+
     def initialize(self, token):
         """Initialize the authentication token during instantiation."""
         self.token = token
