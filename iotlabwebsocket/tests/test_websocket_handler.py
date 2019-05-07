@@ -28,8 +28,52 @@ class TestWebsocketHandler(AsyncHTTPTestCase):
 
     @patch('iotlabwebsocket.handlers.http_handler._nodes')
     @gen_test
-    def test_websocket_connection(self, nodes, ws_open):
-        url = ('ws://localhost:{}/ws/local/123/node-1/serial'
+    def test_websocket_connection_raw(self, nodes, ws_open):
+        url = ('ws://localhost:{}/ws/local/123/node-1/serial/raw'
+               .format(self.api.port))
+        nodes.return_value = json.dumps({'nodes': ['node-1.local']})
+
+        connection = yield tornado.websocket.websocket_connect(
+            url, subprotocols=['user', 'token', 'token'])
+        assert connection.selected_subprotocol == 'token'
+
+        # if handle_websocket_open is called, the connection have passed all
+        # checks with success
+        ws_open.assert_called_once()
+
+        with patch('iotlabwebsocket.web_application'
+                   '.WebApplication.handle_websocket_data') as ws_data:
+            data = b'test'
+            yield connection.write_message(data, binary=True)
+            yield gen.sleep(0.1)
+            ws_data.assert_called_once()
+            args, _ = ws_data.call_args
+            assert len(args) == 2
+            assert isinstance(args[0], WebsocketClientHandler)
+            assert args[1] == data
+            ws_handler = args[0]
+
+            # Check some websocket handler internal methods (just for coverage)
+            assert ws_handler.check_origin("http://localhost") is True
+            assert ws_handler.check_origin(
+                "https://devwww.iot-lab.info") is True
+            assert ws_handler.select_subprotocol(['test', '']) is None
+            assert (ws_handler.select_subprotocol(['user', 'token', 'aaaa']) ==
+                    'token')
+            assert ws_handler.user == 'user'
+            assert not ws_handler.text
+
+        with patch('iotlabwebsocket.web_application'
+                   '.WebApplication.handle_websocket_close') as ws_close:
+            connection.close(code=1000, reason="client exit")
+            yield gen.sleep(0.1)
+            ws_close.assert_called_once()
+            ws_close.assert_called_with(ws_handler)
+
+    @patch('iotlabwebsocket.handlers.http_handler._nodes')
+    @gen_test
+    def test_websocket_connection_text(self, nodes, ws_open):
+        url = ('ws://localhost:{}/ws/local/123/node-1/serial/text'
                .format(self.api.port))
         nodes.return_value = json.dumps({'nodes': ['node-1.local']})
 
@@ -50,7 +94,7 @@ class TestWebsocketHandler(AsyncHTTPTestCase):
             args, _ = ws_data.call_args
             assert len(args) == 2
             assert isinstance(args[0], WebsocketClientHandler)
-            assert args[1] == data
+            assert args[1] == data.encode('utf-8')
             ws_handler = args[0]
 
             # Check some websocket handler internal methods (just for coverage)
@@ -61,6 +105,7 @@ class TestWebsocketHandler(AsyncHTTPTestCase):
             assert (ws_handler.select_subprotocol(['user', 'token', 'aaaa']) ==
                     'token')
             assert ws_handler.user == 'user'
+            assert ws_handler.text
 
         with patch('iotlabwebsocket.web_application'
                    '.WebApplication.handle_websocket_close') as ws_close:
@@ -68,6 +113,39 @@ class TestWebsocketHandler(AsyncHTTPTestCase):
             yield gen.sleep(0.1)
             ws_close.assert_called_once()
             ws_close.assert_called_with(ws_handler)
+
+    @patch('iotlabwebsocket.handlers.http_handler._nodes')
+    @gen_test
+    def test_websocket_connection_text_invalid(self, nodes, ws_open):
+        url = ('ws://localhost:{}/ws/local/123/node-1/serial/text'
+               .format(self.api.port))
+        nodes.return_value = json.dumps({'nodes': ['node-1.local']})
+
+        connection = yield tornado.websocket.websocket_connect(
+            url, subprotocols=['user', 'token', 'token'])
+        assert connection.selected_subprotocol == 'token'
+
+        # if handle_websocket_open is called, the connection have passed all
+        # checks with success
+        ws_open.assert_called_once()
+
+        with patch('iotlabwebsocket.web_application'
+                   '.WebApplication.handle_websocket_data') as ws_data:
+            data = "test"
+            yield connection.write_message(data)
+            yield gen.sleep(0.1)
+            ws_data.assert_called_once()
+            args, _ = ws_data.call_args
+            assert len(args) == 2
+            assert isinstance(args[0], WebsocketClientHandler)
+            assert args[1] == data.encode('utf-8')
+            ws_handler = args[0]
+
+            ws_data.call_count = 0
+            data = b'\xaa\xbb\xcc\xff'
+            yield connection.write_message(data, binary=True)
+            yield gen.sleep(0.1)
+            assert ws_data.call_count == 0
 
     @gen_test
     def test_websocket_connection_invalid_url(self, ws_open):
@@ -81,7 +159,7 @@ class TestWebsocketHandler(AsyncHTTPTestCase):
 
     @gen_test
     def test_websocket_connection_invalid_subprotocol(self, ws_open):
-        url = ('ws://localhost:{}/ws/local/123/node-123/serial'
+        url = ('ws://localhost:{}/ws/local/123/node-123/serial/text'
                .format(self.api.port))
 
         with pytest.raises(tornado.httpclient.HTTPClientError) as exc_info:
@@ -98,7 +176,7 @@ class TestWebsocketHandler(AsyncHTTPTestCase):
 
     @gen_test
     def test_websocket_connection_invalid_node(self, ws_open):
-        url = ('ws://localhost:{}/ws/local/123/invalid-123/serial'
+        url = ('ws://localhost:{}/ws/local/123/invalid-123/serial/text'
                .format(self.api.port))
 
         with pytest.raises(tornado.httpclient.HTTPClientError) as exc_info:
@@ -107,7 +185,7 @@ class TestWebsocketHandler(AsyncHTTPTestCase):
         assert "HTTP 401: Unauthorized" in str(exc_info)
         assert ws_open.call_count == 0
 
-        url = ('ws://localhost:{}/ws/invalid/123/localhost/serial'
+        url = ('ws://localhost:{}/ws/invalid/123/localhost/serial/text'
                .format(self.api.port))
 
         with pytest.raises(tornado.httpclient.HTTPClientError) as exc_info:

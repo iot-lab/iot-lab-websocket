@@ -13,7 +13,7 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
     def _check_path(self):
         # Check path is always correct
         path = self.request.path
-        self.site, self.experiment_id, self.node = path.split('/')[-4:-1]
+        self.site, self.experiment_id, self.node = path.split('/')[-5:-2]
         return True
 
     def select_subprotocol(self, subprotocols):
@@ -64,9 +64,10 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
         self.finish("Invalid node")
         raise gen.Return(False)
 
-    def initialize(self, api):
-        """Initialize the api information."""
+    def initialize(self, api, text):
+        """Initialize the api and binary information."""
         self.api = api
+        self.text = text
 
     @gen.coroutine
     def get(self, *args, **kwargs):
@@ -124,6 +125,11 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
     @gen.coroutine
     def on_message(self, data):
         """Triggered when data is received from the websocket client."""
+        if self.text:
+            try:
+                data = data.encode('utf-8')
+            except (UnicodeEncodeError, UnicodeDecodeError):
+                return
         self.application.handle_websocket_data(self, data)
 
     def on_close(self):

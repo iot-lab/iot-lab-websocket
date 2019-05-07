@@ -69,12 +69,7 @@ class TCPClient(object):
         try:
             while True:
                 data = yield self._tcp.read_bytes(CHUNK_SIZE, partial=True)
-                try:
-                    data_decoded = data.decode('utf-8')
-                except UnicodeDecodeError:
-                    LOGGER.warning("Cannot decode data received via TCP.")
-                    continue
-                received_bytes += len(data_decoded)
+                received_bytes += len(data)
 
                 # Reset stream_byte every CHECK_BYTES_RECEIVED_PERIOD seconds
                 if time.time() - start > CHECK_BYTES_RECEIVED_PERIOD:
@@ -91,7 +86,7 @@ class TCPClient(object):
                     received_bytes = 0
                     start = time.time()
 
-                self.on_data(self.node, data_decoded)
+                self.on_data(self.node, data)
         except StreamClosedError:
             self.ready = False
             self.on_close(self.node,

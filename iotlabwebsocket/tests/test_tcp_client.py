@@ -58,14 +58,14 @@ class NodeHandlerTest(AsyncTestCase):
         server.stream.write(message)
         yield gen.sleep(0.01)
         on_data.assert_called_once()
-        on_data.assert_called_with("localhost", message.decode())
+        on_data.assert_called_with("localhost", message)
         on_data.call_count = 0
 
         message = b"a" * CHUNK_SIZE
         server.stream.write(message)
         yield gen.sleep(0.01)
         on_data.assert_called_once()
-        on_data.assert_called_with("localhost", message.decode())
+        on_data.assert_called_with("localhost", message)
         on_data.call_count = 0
 
         message = b"a" * (CHUNK_SIZE + 1)
@@ -74,12 +74,13 @@ class NodeHandlerTest(AsyncTestCase):
         assert on_data.call_count == 2
         on_data.call_count = 0
 
-        # Non unicode data are not sent to the connected websockets
+        # Raw bytes data are correctly sent to the connected websockets
         message = b'\xAA\xBB'
         server.stream.write(message)
         yield gen.sleep(0.01)
-        assert on_data.call_count == 0
-        assert not server.received
+        assert on_data.call_count == 1
+        on_data.assert_called_with("localhost", message)
+        on_data.call_count = 0
 
         # Data sent by the node_handler should be received by the TCPServer:
         client.send(b'test')

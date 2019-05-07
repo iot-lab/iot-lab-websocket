@@ -20,8 +20,10 @@ class WebApplication(tornado.web.Application):
     def __init__(self, api, use_local_api=False, token=''):
         settings = {'debug': True}
         handlers = [
-            (r"/ws/[a-z]+/[0-9]+/[a-z0-9]+-?[a-z0-9]*-?[0-9]*/serial",
-             WebsocketClientHandler, dict(api=api))
+            (r"/ws/[a-z]+/[0-9]+/[a-z0-9]+-?[a-z0-9]*-?[0-9]*/serial/text",
+             WebsocketClientHandler, dict(api=api, text=True)),
+            (r"/ws/[a-z]+/[0-9]+/[a-z0-9]+-?[a-z0-9]*-?[0-9]*/serial/raw",
+             WebsocketClientHandler, dict(api=api, text=False)),
         ]
 
         if use_local_api:
@@ -65,11 +67,12 @@ class WebApplication(tornado.web.Application):
         """Handle a message coming from a websocket."""
         tcp_client = self.tcp_clients[websocket.node]
         if tcp_client.ready:
-            tcp_client.send(data.encode('utf-8'))
+            tcp_client.send(data)
         else:
             LOGGER.debug("No TCP connection opened, skipping message")
             websocket.write_message("No TCP connection opened, cannot send "
-                                    "message '{}'.\n".format(data))
+                                    "message '{}'.\n"
+                                    .format(data.decode('utf-8')))
 
     def handle_websocket_close(self, websocket):
         """Handle the disconnection of a websocket."""
@@ -91,7 +94,13 @@ class WebApplication(tornado.web.Application):
     def handle_tcp_data(self, node, data):
         """Forwards data from TCP connection to all websocket clients."""
         for websocket in self.websockets[node]:
-            websocket.write_message(data)
+            if websocket.text:
+                try:
+                    data = data.decode('utf-8')
+                except UnicodeDecodeError:
+                    LOGGER.debug("Cannot decode message: %s", data)
+                    continue
+            websocket.write_message(data, binary=not websocket.text)
 
     def handle_tcp_close(self, node, reason="Cannot connect"):
         """Close all websockets connected to a node when TCP is closed."""

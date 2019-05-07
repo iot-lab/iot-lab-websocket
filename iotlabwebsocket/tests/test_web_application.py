@@ -56,7 +56,7 @@ class TestWebApplication(AsyncHTTPTestCase):
     @mock.patch('iotlabwebsocket.handlers.http_handler._nodes')
     @gen_test
     def test_tcp_connections_unit(self, nodes, start, stop, send):
-        url = ('ws://localhost:{}/ws/local/123/node-1/serial'
+        url = ('ws://localhost:{}/ws/local/123/node-1/serial/raw'
                .format(self.api.port))
         nodes.return_value = json.dumps({'nodes': ['node-1.local']})
 
@@ -99,11 +99,11 @@ class TestWebApplication(AsyncHTTPTestCase):
         assert len(self.application.websockets['node-1']) == 1
 
         # Send some data
-        websocket.write_message("test")
+        websocket.write_message(b'test', binary=True)
         yield gen.sleep(0.1)
 
         send.assert_called_once()
-        send.assert_called_with(b"test")
+        send.assert_called_with(b'test')
 
         # Close last websocket
         websocket.close(code=5678, reason="Big Test")
@@ -116,7 +116,7 @@ class TestWebApplication(AsyncHTTPTestCase):
     @mock.patch('iotlabwebsocket.handlers.http_handler._nodes')
     @gen_test
     def test_tcp_connection_server(self, nodes):
-        url = ('ws://localhost:{}/ws/local/123/localhost/serial'
+        url = ('ws://localhost:{}/ws/local/123/localhost/serial/raw'
                .format(self.api.port))
         nodes.return_value = json.dumps({'nodes': ['localhost.local']})
 
@@ -149,7 +149,7 @@ class TestWebApplication(AsyncHTTPTestCase):
         # Smoke test to check that the websocket gets a message when the TCP
         # connection is not opened yet
         self.application.tcp_clients['localhost'].ready = False
-        websocket.write_message(b'test')
+        websocket.write_message(b'test', binary=True)
         yield gen.sleep(0.1)
         websocket_srv.write_message.assert_called_with(
             "No TCP connection opened, cannot send message 'test'.\n")
@@ -165,8 +165,48 @@ class TestWebApplication(AsyncHTTPTestCase):
 
     @mock.patch('iotlabwebsocket.handlers.http_handler._nodes')
     @gen_test
+    def test_tcp_connection_server_text(self, nodes):
+        url = ('ws://localhost:{}/ws/local/123/localhost/serial/text'
+               .format(self.api.port))
+        nodes.return_value = json.dumps({'nodes': ['localhost.local']})
+
+        sock, _ = bind_unused_port()
+        server = TCPServerStub()
+        server.add_socket(sock)
+        server.listen(NODE_TCP_PORT)
+
+        websocket = yield tornado.websocket.websocket_connect(
+            url, subprotocols=['user', 'token', 'token'])
+
+        assert len(self.application.websockets['localhost']) == 1
+
+        # Leave some time for the TCP connection to be ready
+        yield gen.sleep(0.1)
+        assert self.application.tcp_clients['localhost'].ready
+
+        # Send some data
+        websocket_srv = self.application.websockets['localhost'][0]
+        websocket_srv.write_message = mock.Mock()
+        message = 'test'.encode('utf-8')
+        yield server.stream.write(message)
+
+        yield gen.sleep(0.1)
+        assert websocket_srv.write_message.call_count == 1
+
+        # Send some pure binary data
+        websocket_srv.write_message.call_count = 0
+        websocket_srv = self.application.websockets['localhost'][0]
+        websocket_srv.write_message = mock.Mock()
+        message = b'\xaa\xbb\xcc\xff'
+        yield server.stream.write(message)
+
+        yield gen.sleep(0.1)
+        assert websocket_srv.write_message.call_count == 0
+
+    @mock.patch('iotlabwebsocket.handlers.http_handler._nodes')
+    @gen_test
     def test_application_stop(self, nodes):
-        url = ('ws://localhost:{}/ws/local/123/localhost/serial'
+        url = ('ws://localhost:{}/ws/local/123/localhost/serial/raw'
                .format(self.api.port))
         nodes.return_value = json.dumps({'nodes': ['localhost.local']})
 
@@ -189,7 +229,7 @@ class TestWebApplication(AsyncHTTPTestCase):
     @mock.patch('iotlabwebsocket.web_application.MAX_WEBSOCKETS_PER_NODE', 20)
     @gen_test
     def test_user_max_connections(self):
-        url = ('ws://localhost:{}/ws/local/123/localhost/serial'
+        url = ('ws://localhost:{}/ws/local/123/localhost/serial/raw'
                .format(self.api.port))
 
         sock, _ = bind_unused_port()
