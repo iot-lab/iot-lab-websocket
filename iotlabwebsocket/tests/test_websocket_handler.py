@@ -73,7 +73,7 @@ class TestWebsocketHandler(AsyncHTTPTestCase):
     @patch('iotlabwebsocket.handlers.http_handler._nodes')
     @gen_test
     def test_websocket_connection_text(self, nodes, ws_open):
-        url = ('ws://localhost:{}/ws/local/123/node-1/serial/text'
+        url = ('ws://localhost:{}/ws/local/123/node-1/serial'
                .format(self.api.port))
         nodes.return_value = json.dumps({'nodes': ['node-1.local']})
 
@@ -117,7 +117,7 @@ class TestWebsocketHandler(AsyncHTTPTestCase):
     @patch('iotlabwebsocket.handlers.http_handler._nodes')
     @gen_test
     def test_websocket_connection_text_invalid(self, nodes, ws_open):
-        url = ('ws://localhost:{}/ws/local/123/node-1/serial/text'
+        url = ('ws://localhost:{}/ws/local/123/node-1/serial'
                .format(self.api.port))
         nodes.return_value = json.dumps({'nodes': ['node-1.local']})
 
@@ -159,7 +159,7 @@ class TestWebsocketHandler(AsyncHTTPTestCase):
 
     @gen_test
     def test_websocket_connection_invalid_subprotocol(self, ws_open):
-        url = ('ws://localhost:{}/ws/local/123/node-123/serial/text'
+        url = ('ws://localhost:{}/ws/local/123/node-123/serial'
                .format(self.api.port))
 
         with pytest.raises(tornado.httpclient.HTTPClientError) as exc_info:
@@ -176,7 +176,7 @@ class TestWebsocketHandler(AsyncHTTPTestCase):
 
     @gen_test
     def test_websocket_connection_invalid_node(self, ws_open):
-        url = ('ws://localhost:{}/ws/local/123/invalid-123/serial/text'
+        url = ('ws://localhost:{}/ws/local/123/invalid-123/serial'
                .format(self.api.port))
 
         with pytest.raises(tornado.httpclient.HTTPClientError) as exc_info:
@@ -185,7 +185,7 @@ class TestWebsocketHandler(AsyncHTTPTestCase):
         assert "HTTP 401: Unauthorized" in str(exc_info)
         assert ws_open.call_count == 0
 
-        url = ('ws://localhost:{}/ws/invalid/123/localhost/serial/text'
+        url = ('ws://localhost:{}/ws/invalid/123/localhost/serial'
                .format(self.api.port))
 
         with pytest.raises(tornado.httpclient.HTTPClientError) as exc_info:

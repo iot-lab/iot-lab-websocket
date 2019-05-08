@@ -166,7 +166,7 @@ class TestWebApplication(AsyncHTTPTestCase):
     @mock.patch('iotlabwebsocket.handlers.http_handler._nodes')
     @gen_test
     def test_tcp_connection_server_text(self, nodes):
-        url = ('ws://localhost:{}/ws/local/123/localhost/serial/text'
+        url = ('ws://localhost:{}/ws/local/123/localhost/serial'
                .format(self.api.port))
         nodes.return_value = json.dumps({'nodes': ['localhost.local']})
 
