@@ -131,7 +131,7 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
         if self.text:
             try:
                 data = data.encode('utf-8')
-            except (UnicodeEncodeError, UnicodeDecodeError):
+            except (UnicodeEncodeError, UnicodeDecodeError, AttributeError):
                 return
         self.application.handle_websocket_data(self, data)
 
