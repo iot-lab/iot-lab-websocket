@@ -154,7 +154,7 @@ class TestWebsocketHandler(AsyncHTTPTestCase):
 
         with pytest.raises(tornado.httpclient.HTTPClientError) as exc_info:
             _ = yield tornado.websocket.websocket_connect(url)
-        assert "HTTP 404: Not Found" in str(exc_info)
+        assert "HTTP 404: Not Found" in str(exc_info.value)
         assert ws_open.call_count == 0
 
     @gen_test
@@ -165,13 +165,13 @@ class TestWebsocketHandler(AsyncHTTPTestCase):
         with pytest.raises(tornado.httpclient.HTTPClientError) as exc_info:
             _ = yield tornado.websocket.websocket_connect(
                 url, subprotocols=['user', 'token', 'invalid'])
-        assert "HTTP 401: Unauthorized" in str(exc_info)
+        assert "HTTP 401: Unauthorized" in str(exc_info.value)
         assert ws_open.call_count == 0
 
         with pytest.raises(tornado.httpclient.HTTPClientError) as exc_info:
             _ = yield tornado.websocket.websocket_connect(
                 url, subprotocols=['user', 'invalid', 'invalid'])
-        assert "HTTP 401: Unauthorized" in str(exc_info)
+        assert "HTTP 401: Unauthorized" in str(exc_info.value)
         assert ws_open.call_count == 0
 
     @gen_test
@@ -182,7 +182,7 @@ class TestWebsocketHandler(AsyncHTTPTestCase):
         with pytest.raises(tornado.httpclient.HTTPClientError) as exc_info:
             _ = yield tornado.websocket.websocket_connect(
                 url, subprotocols=['user', 'token', 'token'])
-        assert "HTTP 401: Unauthorized" in str(exc_info)
+        assert "HTTP 401: Unauthorized" in str(exc_info.value)
         assert ws_open.call_count == 0
 
         url = ('ws://localhost:{}/ws/invalid/123/localhost/serial'
@@ -191,5 +191,5 @@ class TestWebsocketHandler(AsyncHTTPTestCase):
         with pytest.raises(tornado.httpclient.HTTPClientError) as exc_info:
             _ = yield tornado.websocket.websocket_connect(
                 url, subprotocols=['user', 'token', 'token'])
-        assert "HTTP 401: Unauthorized" in str(exc_info)
+        assert "HTTP 401: Unauthorized" in str(exc_info.value)
         assert ws_open.call_count == 0
