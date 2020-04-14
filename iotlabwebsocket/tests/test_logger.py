@@ -4,8 +4,6 @@ import os.path
 import logging
 from logging.handlers import RotatingFileHandler
 
-import mock
-
 from iotlabwebsocket.logger import setup_server_logger, LOGGER
 
 

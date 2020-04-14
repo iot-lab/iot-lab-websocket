@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import sys
-import unittest
 import math
 
 import mock

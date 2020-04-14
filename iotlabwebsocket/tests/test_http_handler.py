@@ -6,7 +6,6 @@ from collections import namedtuple
 import tornado.testing
 
 from iotlabwebsocket.api import ApiClient
-from iotlabwebsocket.logger import LOGGER
 from iotlabwebsocket.handlers.http_handler import NODES
 from iotlabwebsocket.web_application import WebApplication
 

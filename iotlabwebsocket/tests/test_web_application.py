@@ -4,8 +4,6 @@
 import json
 import sys
 
-import pytest
-
 import mock
 
 import tornado
@@ -18,7 +16,6 @@ from iotlabwebsocket.api import ApiClient
 from iotlabwebsocket.web_application import (WebApplication,
                                              MAX_WEBSOCKETS_PER_NODE,
                                              MAX_WEBSOCKETS_PER_USER)
-from iotlabwebsocket.handlers.websocket_handler import WebsocketClientHandler
 from iotlabwebsocket.clients.tcp_client import NODE_TCP_PORT
 
 
@@ -175,7 +172,7 @@ class TestWebApplication(AsyncHTTPTestCase):
         server.add_socket(sock)
         server.listen(NODE_TCP_PORT)
 
-        websocket = yield tornado.websocket.websocket_connect(
+        _ = yield tornado.websocket.websocket_connect(
             url, subprotocols=['user', 'token', 'token'])
 
         assert len(self.application.websockets['localhost']) == 1

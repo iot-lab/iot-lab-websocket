@@ -1,12 +1,10 @@
 """iotlab-websocket api client."""
 
-import sys
 import json
 import io
 import unittest
 import mock
 
-import tornado
 from tornado.testing import AsyncHTTPTestCase, gen_test
 
 from iotlabwebsocket.api import ApiClient

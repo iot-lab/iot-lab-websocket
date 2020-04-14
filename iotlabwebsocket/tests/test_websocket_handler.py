@@ -139,7 +139,6 @@ class TestWebsocketHandler(AsyncHTTPTestCase):
             assert len(args) == 2
             assert isinstance(args[0], WebsocketClientHandler)
             assert args[1] == data.encode('utf-8')
-            ws_handler = args[0]
 
             ws_data.call_count = 0
             data = b'\xaa\xbb\xcc\xff'

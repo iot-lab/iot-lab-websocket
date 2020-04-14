@@ -10,7 +10,7 @@ from . import DEFAULT_API_HOST, DEFAULT_API_PORT
 API_URL = "{}://{}:{}/api/experiments"
 
 
-class ApiClient(object):
+class ApiClient:
     """Class that store information about the REST API."""
 
     def __init__(self, protocol, host=DEFAULT_API_HOST, port=DEFAULT_API_PORT,

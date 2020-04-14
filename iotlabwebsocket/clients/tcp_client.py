@@ -14,7 +14,7 @@ CHECK_BYTES_RECEIVED_PERIOD = 1  # seconds
 MAX_BYTES_RECEIVED_PER_PERIOD = 15000
 
 
-class TCPClient(object):
+class TCPClient:
     """Class that manages the TCP client connection to a node."""
 
     def __init__(self):
