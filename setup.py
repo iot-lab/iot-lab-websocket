@@ -1,5 +1,4 @@
 import os
-from os.path import join as pjoin
 from setuptools import setup, find_packages
 
 PACKAGE = 'iotlabwebsocket'
@@ -20,31 +19,33 @@ def get_version(package):
             if line.startswith('__version__'):
                 return eval(line.split('=')[-1])
 
+
 if __name__ == '__main__':
 
-    setup(name=PACKAGE,
-          version=get_version(PACKAGE),
-          description=('Provides server exposing IoT-LAB nodes via'
-                       'a websocket connection.'),
-          long_description=readme('README.md'),
-          author='IoT-LAB Team',
-          author_email='admin@iot-lab.info',
-          url='http://www.iot-lab.info',
-          license='BSD',
-          keywords="iot websocket serial web",
-          platforms='any',
-          packages=find_packages(),
-          scripts=[],
-          entry_points={
-              'console_scripts': [
-                  'iotlab-websocket-service = '
-                  'iotlabwebsocket.service_cli:main',
-              ],
-          },
-          install_requires=[
+    setup(
+        name=PACKAGE,
+        version=get_version(PACKAGE),
+        description=('Provides server exposing IoT-LAB nodes via'
+                     'a websocket connection.'),
+        long_description=readme('README.md'),
+        author='IoT-LAB Team',
+        author_email='admin@iot-lab.info',
+        url='http://www.iot-lab.info',
+        license='BSD',
+        keywords="iot websocket serial web",
+        platforms='any',
+        packages=find_packages(),
+        scripts=[],
+        entry_points={
+            'console_scripts': [
+                'iotlab-websocket-service = '
+                'iotlabwebsocket.service_cli:main',
+            ],
+        },
+        install_requires=[
             'tornado==5.1',
-          ],
-          classifiers=[
+        ],
+        classifiers=[
             'Development Status :: 4 - Beta',
             'Programming Language :: Python :: 2.7',
             'Programming Language :: Python :: 3.4',
@@ -54,6 +55,7 @@ if __name__ == '__main__':
             'Environment :: Console',
             'Topic :: Communications',
             'License :: OSI Approved :: ',
-            'License :: OSI Approved :: BSD License'],
-          zip_safe=False,
-          )
+            'License :: OSI Approved :: BSD License'
+        ],
+        zip_safe=False,
+    )
