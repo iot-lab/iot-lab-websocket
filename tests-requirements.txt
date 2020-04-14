@@ -1,7 +1,7 @@
-pytest>=3.0
-pytest-pep8
+pytest
 pytest-cov
-setuptools-lint
-pylint>=1.8,<2
+flake8
+pylint
+black
+isort
 mock
-codecov>=1.4.0
