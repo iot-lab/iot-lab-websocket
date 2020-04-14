@@ -17,20 +17,31 @@ MAX_WEBSOCKETS_PER_USER = 10
 class WebApplication(tornado.web.Application):
     """IoT-LAB websocket to tcp redirector."""
 
-    def __init__(self, api, use_local_api=False, token=''):
-        settings = {'debug': True}
+    def __init__(self, api, use_local_api=False, token=""):
+        settings = {"debug": True}
         handlers = [
-            (r"/ws/[a-z]+/[0-9]+/[a-z0-9]+-?[a-z0-9]*-?[0-9]*/serial",
-             WebsocketClientHandler, dict(api=api, text=True)),
-            (r"/ws/[a-z]+/[0-9]+/[a-z0-9]+-?[a-z0-9]*-?[0-9]*/serial/raw",
-             WebsocketClientHandler, dict(api=api, text=False)),
+            (
+                r"/ws/[a-z]+/[0-9]+/[a-z0-9]+-?[a-z0-9]*-?[0-9]*/serial",
+                WebsocketClientHandler,
+                dict(api=api, text=True),
+            ),
+            (
+                r"/ws/[a-z]+/[0-9]+/[a-z0-9]+-?[a-z0-9]*-?[0-9]*/serial/raw",
+                WebsocketClientHandler,
+                dict(api=api, text=False),
+            ),
         ]
 
         if use_local_api:
-            api.protocol = 'http'
+            api.protocol = "http"
             api.host = DEFAULT_API_HOST
-            handlers.append((r"/api/experiments/[0-9]+/.*",
-                             HttpApiRequestHandler, dict(token=token)))
+            handlers.append(
+                (
+                    r"/api/experiments/[0-9]+/.*",
+                    HttpApiRequestHandler,
+                    dict(token=token),
+                )
+            )
 
         self.tcp_clients = defaultdict(TCPClient)
         self.websockets = defaultdict(list)
@@ -46,19 +57,26 @@ class WebApplication(tornado.web.Application):
         tcp_client = self.tcp_clients[node]
         if not self.websockets[node]:
             # Open the tcp connection on first websocket connection.
-            tcp_client.start(node, on_data=self.handle_tcp_data,
-                             on_close=self.handle_tcp_close)
+            tcp_client.start(
+                node, on_data=self.handle_tcp_data, on_close=self.handle_tcp_close
+            )
         if len(self.websockets[node]) == MAX_WEBSOCKETS_PER_NODE:
             websocket.close(
                 code=1000,
-                reason=("Cannot open more than {} connections to node {}."
-                        .format(MAX_WEBSOCKETS_PER_NODE, node)))
+                reason=(
+                    "Cannot open more than {} connections to node {}.".format(
+                        MAX_WEBSOCKETS_PER_NODE, node
+                    )
+                ),
+            )
         elif self.user_connections[user] == MAX_WEBSOCKETS_PER_USER:
             websocket.close(
                 code=1000,
-                reason=("Max number of connections ({}) reached for user {} "
-                        "on site {}."
-                        .format(MAX_WEBSOCKETS_PER_USER, user, site)))
+                reason=(
+                    "Max number of connections ({}) reached for user {} "
+                    "on site {}.".format(MAX_WEBSOCKETS_PER_USER, user, site)
+                ),
+            )
         else:
             self.user_connections[user] += 1
             self.websockets[node].append(websocket)
@@ -70,9 +88,10 @@ class WebApplication(tornado.web.Application):
             tcp_client.send(data)
         else:
             LOGGER.debug("No TCP connection opened, skipping message")
-            websocket.write_message("No TCP connection opened, cannot send "
-                                    "message '{}'.\n"
-                                    .format(data.decode('utf-8')))
+            websocket.write_message(
+                "No TCP connection opened, cannot send "
+                "message '{}'.\n".format(data.decode("utf-8"))
+            )
 
     def handle_websocket_close(self, websocket):
         """Handle the disconnection of a websocket."""
@@ -96,7 +115,7 @@ class WebApplication(tornado.web.Application):
         for websocket in self.websockets[node]:
             if websocket.text:
                 try:
-                    data = data.decode('utf-8')
+                    data = data.decode("utf-8")
                 except UnicodeDecodeError:
                     LOGGER.debug("Cannot decode message: %s", data)
                     continue

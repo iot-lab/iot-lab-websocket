@@ -17,7 +17,7 @@ def test_server_empty_logger():
 def test_server_file_logger(tmpdir):
     logger = logging.getLogger("iotlabwebsocket")
     assert logger is LOGGER
-    log_file = os.path.join(tmpdir.strpath, 'test.log')
+    log_file = os.path.join(tmpdir.strpath, "test.log")
     setup_server_logger(log_file=log_file)
     assert len(logger.handlers) == 1
 
@@ -25,7 +25,7 @@ def test_server_file_logger(tmpdir):
     assert isinstance(handler, RotatingFileHandler)
 
     logger.info("Test logger")
-    with open(log_file, 'r') as f:
+    with open(log_file, "r") as f:
         assert "Test logger" in f.read()
 
     logger.removeHandler(handler)

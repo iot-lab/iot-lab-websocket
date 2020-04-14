@@ -12,7 +12,7 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
 
     def _check_path(self):
         # Check path is always correct
-        path_elems = self.request.path.split('/')
+        path_elems = self.request.path.split("/")
         if self.text:
             self.site, self.experiment_id, self.node = path_elems[-4:-1]
         else:
@@ -27,7 +27,7 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
 
     @gen.coroutine
     def _check_subprotocols(self, subprotocols):
-        if len(subprotocols) != 3 or subprotocols[1].strip() != 'token':
+        if len(subprotocols) != 3 or subprotocols[1].strip() != "token":
             LOGGER.warning("Reject websocket connection: invalib subprotocol")
             self.set_status(401)  # Authentication failed
             self.finish("Invalid subprotocols")
@@ -38,12 +38,12 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
         # Fetch the token from the authentication server
         api_token = yield self.api.fetch_token_async(self.experiment_id)
 
-        LOGGER.debug("Fetched token '%s' for experiment id '%s'",
-                     api_token, self.experiment_id)
+        LOGGER.debug(
+            "Fetched token '%s' for experiment id '%s'", api_token, self.experiment_id
+        )
 
         if req_token != api_token:
-            LOGGER.warning("Reject websocket connection: invalib token '%s'",
-                           req_token)
+            LOGGER.warning("Reject websocket connection: invalib token '%s'", req_token)
             self.set_status(401)  # Authentication failed
             self.finish("Invalid token '{}'".format(req_token))
             raise gen.Return(False)
@@ -55,13 +55,17 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
     def _check_node(self):
         nodes = yield self.api.fetch_nodes_async(self.experiment_id)
         for node in nodes:
-            node_elem = node.split('.')
+            node_elem = node.split(".")
             if node_elem[0] == self.node and node_elem[1] == self.site:
                 LOGGER.debug("Requested node found in experiment")
                 raise gen.Return(True)
 
-        LOGGER.warning("Invalid node '%s' for experiment id '%s' in site "
-                       "'%s'", self.node, self.experiment_id, self.site)
+        LOGGER.warning(
+            "Invalid node '%s' for experiment id '%s' in site " "'%s'",
+            self.node,
+            self.experiment_id,
+            self.site,
+        )
         # No node matches the requested ressource for the experiment and site.
         self.set_status(401)  # Authentication failed
         self.finish("Invalid node")
@@ -92,8 +96,7 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
 
         # Verify token provided in subprotocols, since there's an asynchronous
         # call to the API, we wait for it to complete.
-        subprotocols = self.request.headers.get(
-            "Sec-WebSocket-Protocol", "").split(',')
+        subprotocols = self.request.headers.get("Sec-WebSocket-Protocol", "").split(",")
         valid_subprotocols = yield self._check_subprotocols(subprotocols)
         if not valid_subprotocols:
             return
@@ -108,8 +111,11 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
         # Let parent class correctly configure the websocket connection
         yield super(WebsocketClientHandler, self).get(*args, **kwargs)
 
-        LOGGER.info("Websocket connection for experiment '%s' on node '%s'",
-                    self.experiment_id, self.node)
+        LOGGER.info(
+            "Websocket connection for experiment '%s' on node '%s'",
+            self.experiment_id,
+            self.node,
+        )
 
     def check_origin(self, origin):
         """Allow connections from anywhere."""
@@ -130,14 +136,17 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
         """Triggered when data is received from the websocket client."""
         if self.text:
             try:
-                data = data.encode('utf-8')
+                data = data.encode("utf-8")
             except (UnicodeEncodeError, UnicodeDecodeError, AttributeError):
                 return
         self.application.handle_websocket_data(self, data)
 
     def on_close(self):
         """Manage the disconnection of the websocket."""
-        LOGGER.info("Websocket connection closed for node '%s', code: %d, "
-                    "reason: '%s'",
-                    self.node, self.close_code, self.close_reason)
+        LOGGER.info(
+            "Websocket connection closed for node '%s', code: %d, " "reason: '%s'",
+            self.node,
+            self.close_code,
+            self.close_reason,
+        )
         self.application.handle_websocket_close(self)

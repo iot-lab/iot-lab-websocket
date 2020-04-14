@@ -12,9 +12,12 @@ from tornado import gen
 
 from tornado.testing import AsyncTestCase, gen_test, bind_unused_port
 
-from iotlabwebsocket.clients.tcp_client import (TCPClient, NODE_TCP_PORT,
-                                                CHUNK_SIZE,
-                                                MAX_BYTES_RECEIVED_PER_PERIOD)
+from iotlabwebsocket.clients.tcp_client import (
+    TCPClient,
+    NODE_TCP_PORT,
+    CHUNK_SIZE,
+    MAX_BYTES_RECEIVED_PER_PERIOD,
+)
 
 
 class TCPServerStub(TCPServer):
@@ -34,7 +37,6 @@ class TCPServerStub(TCPServer):
 
 
 class NodeHandlerTest(AsyncTestCase):
-
     @gen_test
     def test_tcp_connection(self):
         client = TCPClient()
@@ -74,7 +76,7 @@ class NodeHandlerTest(AsyncTestCase):
         on_data.call_count = 0
 
         # Raw bytes data are correctly sent to the connected websockets
-        message = b'\xAA\xBB'
+        message = b"\xAA\xBB"
         server.stream.write(message)
         yield gen.sleep(0.01)
         assert on_data.call_count == 1
@@ -82,7 +84,7 @@ class NodeHandlerTest(AsyncTestCase):
         on_data.call_count = 0
 
         # Data sent by the node_handler should be received by the TCPServer:
-        client.send(b'test')
+        client.send(b"test")
         yield gen.sleep(0.01)
         on_data.call_count == 1
         assert server.received
@@ -90,9 +92,9 @@ class NodeHandlerTest(AsyncTestCase):
         # Sending unicode character works
         on_data.call_count = 0
         server.received = False
-        message = 'éééààà°°°°'
+        message = "éééààà°°°°"
         if sys.version_info[0] > 2:
-            message = message.encode('utf-8')
+            message = message.encode("utf-8")
         client.send(message)
         yield gen.sleep(0.01)
         on_data.call_count == 1
@@ -104,7 +106,7 @@ class NodeHandlerTest(AsyncTestCase):
         client.stop()
         yield gen.sleep(0.01)
         on_close.assert_called_once()
-        client.send(b'test')
+        client.send(b"test")
         yield gen.sleep(0.01)
         assert not server.received
 
@@ -140,8 +142,10 @@ class NodeHandlerTest(AsyncTestCase):
         message = b"A" * MAX_BYTES_RECEIVED_PER_PERIOD
         server.stream.write(message)
         yield gen.sleep(0.01)
-        assert (on_data.call_count ==
-                (math.floor(MAX_BYTES_RECEIVED_PER_PERIOD / CHUNK_SIZE)) + 1)
+        assert (
+            on_data.call_count
+            == (math.floor(MAX_BYTES_RECEIVED_PER_PERIOD / CHUNK_SIZE)) + 1
+        )
         yield gen.sleep(1)
         server.stream.write(b"Too fast")
         yield gen.sleep(0.01)
