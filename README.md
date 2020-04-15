@@ -1,6 +1,6 @@
 # IoT-LAB websocket tools
 
-[![Build Status](https://ci.inria.fr/iot-lab/job/iot-lab-websocket/badge/icon)](https://ci.inria.fr/iot-lab/job/iot-lab-websocket/)
+![CI](https://github.com/iot-lab/iot-lab-websocket/workflows/CI/badge.svg)
 
 This application provides a redirection mecanism between the TCP server
 running on an IoT-LAB node to websockets clients.
