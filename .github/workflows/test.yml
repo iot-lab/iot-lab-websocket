@@ -15,6 +15,7 @@ jobs:
     runs-on: ${{ matrix.platform }}
     strategy:
       max-parallel: 4
+      fail-fast: false
       matrix:
         platform:
           - ubuntu-latest  # ubuntu-18.04
