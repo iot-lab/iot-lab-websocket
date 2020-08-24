@@ -77,7 +77,7 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
         self.text = text
 
     @gen.coroutine
-    def get(self, *args, **kwargs):
+    def get(self, *args, **kwargs):  # pylint: disable=invalid-overridden-method
         """Triggered before any websocket connection is opened.
 
         This method checks if the url path is valid: the url path be in the

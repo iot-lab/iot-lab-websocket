@@ -1,7 +1,5 @@
 """Client class for REST API."""
 
-# pylint: disable=bad-continuation
-
 import json
 
 import tornado
