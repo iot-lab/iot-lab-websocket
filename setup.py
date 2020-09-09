@@ -42,7 +42,9 @@ if __name__ == "__main__":
                 "iotlab-websocket-service = " "iotlabwebsocket.service_cli:main",
             ],
         },
-        install_requires=["tornado==5.1",],
+        install_requires=[
+            "tornado==5.1",
+        ],
         classifiers=[
             "Development Status :: 4 - Beta",
             "Programming Language :: Python :: 2.7",
