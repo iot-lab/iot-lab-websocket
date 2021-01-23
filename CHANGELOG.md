@@ -1,6 +1,15 @@
 Changelog
 =========
 
+Version 0.3.0
+-------------
+
++ Limit the number of maximum connections per user
++ Handle binary and text streams in separate endpoints
++ Switch CI to Github Actions
++ Add black formatter to lint checks
++ Full test coverage
+
 Version 0.2.0
 -------------
 
