@@ -1,6 +1,13 @@
 Changelog
 =========
 
+Version 0.4.0
+-------------
+
++ Drop Python 2 support and explicitly support Python 3.6+
++ Use f-string where possible
++ Add Dockerfile
+
 Version 0.3.0
 -------------
 
