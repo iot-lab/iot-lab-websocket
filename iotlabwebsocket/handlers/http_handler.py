@@ -37,19 +37,19 @@ class HttpApiRequestHandler(web.RequestHandler):
 
             if msg is not None:
                 LOGGER.debug(
-                    "Token request for experiment id '%s' failed.", experiment_id
+                    f"Token request for experiment id '{experiment_id}' failed."
                 )
                 self.set_status(400)
                 self.finish(msg)
                 return
 
-            LOGGER.debug("Received request token for experiment '%s'", experiment_id)
-            LOGGER.debug("Internal token: '%s'", self.token)
+            LOGGER.debug(f"Received request token for experiment '{experiment_id}'")
+            LOGGER.debug(f"Internal token: '{self.token}'")
             self.write(json.dumps({"token": self.token}))
         elif not resource:
             self.write(_nodes())
         else:
             self.set_status(404)
-            self.finish("Invalid resource '{}'".format(resource))
+            self.finish(f"Invalid resource '{resource}'")
             return
         self.finish()

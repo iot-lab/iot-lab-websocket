@@ -22,7 +22,7 @@ def main(args=None):
     app = WebApplication(api, use_local_api=args.use_local_api, token=args.token)
     try:
         app.listen(args.port)
-        LOGGER.info("Application started, listening on port %s", args.port)
+        LOGGER.info(f"Application started, listening on port {args.port}")
         tornado.ioloop.IOLoop.instance().start()
     except KeyboardInterrupt:
         LOGGER.debug("Shuting down service")

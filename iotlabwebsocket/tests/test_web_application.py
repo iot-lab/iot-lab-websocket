@@ -53,7 +53,7 @@ class TestWebApplication(AsyncHTTPTestCase):
     @mock.patch("iotlabwebsocket.handlers.http_handler._nodes")
     @gen_test
     def test_tcp_connections_unit(self, nodes, start, stop, send):
-        url = "ws://localhost:{}/ws/local/123/node-1/serial/raw".format(self.api.port)
+        url = f"ws://localhost:{self.api.port}/ws/local/123/node-1/serial/raw"
         nodes.return_value = json.dumps({"nodes": ["node-1.local"]})
 
         websocket = yield tornado.websocket.websocket_connect(
@@ -116,9 +116,7 @@ class TestWebApplication(AsyncHTTPTestCase):
     @mock.patch("iotlabwebsocket.handlers.http_handler._nodes")
     @gen_test
     def test_tcp_connection_server(self, nodes):
-        url = "ws://localhost:{}/ws/local/123/localhost/serial/raw".format(
-            self.api.port
-        )
+        url = f"ws://localhost:{self.api.port}/ws/local/123/localhost/serial/raw"
         nodes.return_value = json.dumps({"nodes": ["localhost.local"]})
 
         sock, _ = bind_unused_port()
@@ -169,7 +167,7 @@ class TestWebApplication(AsyncHTTPTestCase):
     @mock.patch("iotlabwebsocket.handlers.http_handler._nodes")
     @gen_test
     def test_tcp_connection_server_text(self, nodes):
-        url = "ws://localhost:{}/ws/local/123/localhost/serial".format(self.api.port)
+        url = f"ws://localhost:{self.api.port}/ws/local/123/localhost/serial"
         nodes.return_value = json.dumps({"nodes": ["localhost.local"]})
 
         sock, _ = bind_unused_port()
@@ -209,9 +207,7 @@ class TestWebApplication(AsyncHTTPTestCase):
     @mock.patch("iotlabwebsocket.handlers.http_handler._nodes")
     @gen_test
     def test_application_stop(self, nodes):
-        url = "ws://localhost:{}/ws/local/123/localhost/serial/raw".format(
-            self.api.port
-        )
+        url = f"ws://localhost:{self.api.port}/ws/local/123/localhost/serial/raw"
         nodes.return_value = json.dumps({"nodes": ["localhost.local"]})
 
         sock, _ = bind_unused_port()

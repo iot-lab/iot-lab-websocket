@@ -40,7 +40,7 @@ class ApiClient:
     @property
     def url(self):
         """Returns the base URL for experiments in the API."""
-        return API_URL.format(self.protocol, self.host, self.port)
+        return f"{self.protocol}://{self.host}:{self.port}/api/experiments"
 
     @staticmethod
     def _fetch_sync(request):

@@ -43,15 +43,13 @@ class TCPClient:
         self.on_close = on_close
         self.on_data = on_data
         try:
-            LOGGER.debug("Opening TCP connection to '%s:%d'", node, NODE_TCP_PORT)
+            LOGGER.debug(f"Opening TCP connection to '{node}:{NODE_TCP_PORT}'")
             self._tcp = yield tcpclient.TCPClient().connect(node, NODE_TCP_PORT)
-            LOGGER.debug("TCP connection opened on '%s:%d'", node, NODE_TCP_PORT)
+            LOGGER.debug(f"TCP connection opened on '{node}:{NODE_TCP_PORT}'")
         except (StreamClosedError, socket.gaierror):
-            LOGGER.warning("Cannot open TCP connection to %s:%d", node, NODE_TCP_PORT)
+            LOGGER.warning(f"Cannot open TCP connection to {node}:{NODE_TCP_PORT}")
             # We can't connect to the node with TCP, closing all websockets
-            self.on_close(
-                self.node, reason="Cannot connect to node {}".format(self.node)
-            )
+            self.on_close(self.node, reason=f"Cannot connect to node {self.node}")
             return
         LOGGER.debug("TCP connection is ready")
         self.ready = True
@@ -60,7 +58,7 @@ class TCPClient:
     @gen.coroutine
     def _read_stream(self):
         LOGGER.debug(
-            "Listening to TCP connection for node %s:%d", self.node, NODE_TCP_PORT
+            f"Listening to TCP connection for node {self.node}:{NODE_TCP_PORT}"
         )
         received_bytes = 0
         start = time.time()
@@ -73,18 +71,15 @@ class TCPClient:
                 if time.time() - start > CHECK_BYTES_RECEIVED_PERIOD:
                     if received_bytes > MAX_BYTES_RECEIVED_PER_PERIOD:
                         LOGGER.warning(
-                            "Node %s is sending too fast, "
-                            "received %d bytes in %d seconds, "
-                            "closing.",
-                            self.node,
-                            received_bytes,
-                            CHECK_BYTES_RECEIVED_PERIOD,
+                            f"Node {self.node} is sending too fast, "
+                            f"received {received_bytes} bytes in "
+                            f"{CHECK_BYTES_RECEIVED_PERIOD} seconds, closing."
                         )
                         # Will close all websocket connections
                         # and as a consequence, close the TCP connection
                         self.on_close(
                             self.node,
-                            reason=("Node {} is sending too fast".format(self.node)),
+                            reason=(f"Node {self.node} is sending too fast"),
                         )
                     received_bytes = 0
                     start = time.time()
@@ -92,5 +87,5 @@ class TCPClient:
                 self.on_data(self.node, data)
         except StreamClosedError:
             self.ready = False
-            self.on_close(self.node, "Connection to {} is closed".format(self.node))
-            LOGGER.info("TCP connection to '%s' is closed.", self.node)
+            self.on_close(self.node, f"Connection to {self.node} is closed")
+            LOGGER.info(f"TCP connection to '{self.node} is closed.")

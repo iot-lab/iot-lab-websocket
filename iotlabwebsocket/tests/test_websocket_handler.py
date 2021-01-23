@@ -28,7 +28,7 @@ class TestWebsocketHandler(AsyncHTTPTestCase):
     @patch("iotlabwebsocket.handlers.http_handler._nodes")
     @gen_test
     def test_websocket_connection_raw(self, nodes, ws_open):
-        url = "ws://localhost:{}/ws/local/123/node-1/serial/raw".format(self.api.port)
+        url = f"ws://localhost:{self.api.port}/ws/local/123/node-1/serial/raw"
         nodes.return_value = json.dumps({"nodes": ["node-1.local"]})
 
         connection = yield tornado.websocket.websocket_connect(
@@ -72,7 +72,7 @@ class TestWebsocketHandler(AsyncHTTPTestCase):
     @patch("iotlabwebsocket.handlers.http_handler._nodes")
     @gen_test
     def test_websocket_connection_text(self, nodes, ws_open):
-        url = "ws://localhost:{}/ws/local/123/node-1/serial".format(self.api.port)
+        url = f"ws://localhost:{self.api.port}/ws/local/123/node-1/serial"
         nodes.return_value = json.dumps({"nodes": ["node-1.local"]})
 
         connection = yield tornado.websocket.websocket_connect(
@@ -116,7 +116,7 @@ class TestWebsocketHandler(AsyncHTTPTestCase):
     @patch("iotlabwebsocket.handlers.http_handler._nodes")
     @gen_test
     def test_websocket_connection_text_invalid(self, nodes, ws_open):
-        url = "ws://localhost:{}/ws/local/123/node-1/serial".format(self.api.port)
+        url = f"ws://localhost:{self.api.port}/ws/local/123/node-1/serial"
         nodes.return_value = json.dumps({"nodes": ["node-1.local"]})
 
         connection = yield tornado.websocket.websocket_connect(
@@ -148,7 +148,7 @@ class TestWebsocketHandler(AsyncHTTPTestCase):
 
     @gen_test
     def test_websocket_connection_invalid_url(self, ws_open):
-        url = "ws://localhost:{}/ws/local///serial".format(self.api.port)
+        url = f"ws://localhost:{self.api.port}/ws/local///serial"
 
         with pytest.raises(tornado.httpclient.HTTPClientError) as exc_info:
             _ = yield tornado.websocket.websocket_connect(url)
@@ -157,7 +157,7 @@ class TestWebsocketHandler(AsyncHTTPTestCase):
 
     @gen_test
     def test_websocket_connection_invalid_subprotocol(self, ws_open):
-        url = "ws://localhost:{}/ws/local/123/node-123/serial".format(self.api.port)
+        url = f"ws://localhost:{self.api.port}/ws/local/123/node-123/serial"
 
         with pytest.raises(tornado.httpclient.HTTPClientError) as exc_info:
             _ = yield tornado.websocket.websocket_connect(
@@ -175,7 +175,7 @@ class TestWebsocketHandler(AsyncHTTPTestCase):
 
     @gen_test
     def test_websocket_connection_invalid_node(self, ws_open):
-        url = "ws://localhost:{}/ws/local/123/invalid-123/serial".format(self.api.port)
+        url = f"ws://localhost:{self.api.port}/ws/local/123/invalid-123/serial"
 
         with pytest.raises(tornado.httpclient.HTTPClientError) as exc_info:
             _ = yield tornado.websocket.websocket_connect(
@@ -184,7 +184,7 @@ class TestWebsocketHandler(AsyncHTTPTestCase):
         assert "HTTP 401: Unauthorized" in str(exc_info.value)
         assert ws_open.call_count == 0
 
-        url = "ws://localhost:{}/ws/invalid/123/localhost/serial".format(self.api.port)
+        url = f"ws://localhost:{self.api.port}/ws/invalid/123/localhost/serial"
 
         with pytest.raises(tornado.httpclient.HTTPClientError) as exc_info:
             _ = yield tornado.websocket.websocket_connect(

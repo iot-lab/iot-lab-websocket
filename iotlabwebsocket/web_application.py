@@ -64,17 +64,16 @@ class WebApplication(tornado.web.Application):
             websocket.close(
                 code=1000,
                 reason=(
-                    "Cannot open more than {} connections to node {}.".format(
-                        MAX_WEBSOCKETS_PER_NODE, node
-                    )
+                    f"Cannot open more than {MAX_WEBSOCKETS_PER_NODE} "
+                    f"connections to node {node}."
                 ),
             )
         elif self.user_connections[user] == MAX_WEBSOCKETS_PER_USER:
             websocket.close(
                 code=1000,
                 reason=(
-                    "Max number of connections ({}) reached for user {} "
-                    "on site {}.".format(MAX_WEBSOCKETS_PER_USER, user, site)
+                    f"Max number of connections ({MAX_WEBSOCKETS_PER_USER}) "
+                    f"reached for user {user} on site {site}."
                 ),
             )
         else:
@@ -89,8 +88,8 @@ class WebApplication(tornado.web.Application):
         else:
             LOGGER.debug("No TCP connection opened, skipping message")
             websocket.write_message(
-                "No TCP connection opened, cannot send "
-                "message '{}'.\n".format(data.decode("utf-8"))
+                f"No TCP connection opened, cannot send "
+                f"message '{data.decode('utf-8')}'.\n"
             )
 
     def handle_websocket_close(self, websocket):
@@ -105,7 +104,7 @@ class WebApplication(tornado.web.Application):
 
         # websockets list is now empty for given node, closing tcp connection.
         if tcp_client.ready and not self.websockets[node]:
-            LOGGER.debug("Closing TCP connection to node '%s'", node)
+            LOGGER.debug(f"Closing TCP connection to node '{node}'")
             tcp_client.stop()
             self.tcp_clients.pop(node)
             del tcp_client
@@ -117,7 +116,7 @@ class WebApplication(tornado.web.Application):
                 try:
                     data = data.decode("utf-8")
                 except UnicodeDecodeError:
-                    LOGGER.debug("Cannot decode message: %s", data)
+                    LOGGER.debug(f"Cannot decode message: {data}")
                     continue
             websocket.write_message(data, binary=not websocket.text)
 
