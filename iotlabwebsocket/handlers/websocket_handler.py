@@ -31,7 +31,7 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
             LOGGER.warning("Reject websocket connection: invalib subprotocol")
             self.set_status(401)  # Authentication failed
             self.finish("Invalid subprotocols")
-            raise gen.Return(False)
+            return False
 
         req_token = subprotocols[2].strip()
 
@@ -46,10 +46,10 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
             LOGGER.warning("Reject websocket connection: invalib token '%s'", req_token)
             self.set_status(401)  # Authentication failed
             self.finish("Invalid token '{}'".format(req_token))
-            raise gen.Return(False)
+            return False
 
         LOGGER.debug("Provided token '%s' verified", req_token)
-        raise gen.Return(True)
+        return True
 
     @gen.coroutine
     def _check_node(self):
@@ -58,7 +58,7 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
             node_elem = node.split(".")
             if node_elem[0] == self.node and node_elem[1] == self.site:
                 LOGGER.debug("Requested node found in experiment")
-                raise gen.Return(True)
+                return True
 
         LOGGER.warning(
             "Invalid node '%s' for experiment id '%s' in site " "'%s'",
@@ -69,7 +69,7 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
         # No node matches the requested ressource for the experiment and site.
         self.set_status(401)  # Authentication failed
         self.finish("Invalid node")
-        raise gen.Return(False)
+        return False
 
     def initialize(self, api, text):
         """Initialize the api and binary information."""
