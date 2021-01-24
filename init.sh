@@ -7,8 +7,8 @@ set -e
 : ${API_USER:=}
 : ${API_PASSWORD:=}
 
-export API_USER
-export API_PASSWORD
+export API_USER=${API_USER}
+export API_PASSWORD=${API_PASSWORD}
 
 python3 /usr/local/bin/iotlab-websocket-service --port 8080 \
     --api-protocol ${API_PROTOCOL} \
