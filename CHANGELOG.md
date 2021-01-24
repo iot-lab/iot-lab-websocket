@@ -1,6 +1,12 @@
 Changelog
 =========
 
+Version 0.4.2
+-------------
+
++ Pass API user credentials via environnement variables in Docker
++ Fix wrong variable name for API port
+
 Version 0.4.1
 -------------
 
