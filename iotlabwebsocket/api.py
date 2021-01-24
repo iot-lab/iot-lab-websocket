@@ -7,8 +7,6 @@ from tornado import gen
 
 from . import DEFAULT_API_HOST, DEFAULT_API_PORT
 
-API_URL = "{}://{}:{}/api/experiments"
-
 
 class ApiClient:
     """Class that store information about the REST API."""
@@ -57,7 +55,7 @@ class ApiClient:
         raise gen.Return(response.buffer.read())
 
     def _request(self, exp_id, resource):
-        _url = "{}/{}/{}".format(self.url, exp_id, resource)
+        _url = f"{self.url}/{exp_id}/{resource}"
         kwargs = {}
         if self.username and self.password:
             kwargs.update(
