@@ -108,13 +108,13 @@ class ServiceCliTest(unittest.TestCase):
             "--port",
             port_test,
         ]
-        os.environ["USERNAME"] = username
-        os.environ["PASSWORD"] = password
+        os.environ["API_USER"] = username
+        os.environ["API_PASSWORD"] = password
         main(args)
 
         # Cleanup
-        os.environ.pop("USERNAME")
-        os.environ.pop("PASSWORD")
+        os.environ.pop("API_USER")
+        os.environ.pop("API_PASSWORD")
 
         ioloop.assert_called_once()  # for the start
         args, kwargs = init.call_args
