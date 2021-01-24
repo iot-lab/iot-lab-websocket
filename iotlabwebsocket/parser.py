@@ -38,13 +38,13 @@ def service_cli_parser():
     parser.add_argument(
         "--api-user",
         type=str,
-        default=os.getenv("USERNAME", ""),
+        default=os.getenv("API_USER", ""),
         help="username used to connect to the REST API",
     )
     parser.add_argument(
         "--api-password",
         type=str,
-        default=os.getenv("PASSWORD", ""),
+        default=os.getenv("API_PASSWORD", ""),
         help="password used to connect to the REST API",
     )
     parser.add_argument(
