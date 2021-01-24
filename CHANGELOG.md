@@ -1,6 +1,11 @@
 Changelog
 =========
 
+Version 0.4.1
+-------------
+
++ Add api user/password env variables that were missing in the docker entrypoint
+
 Version 0.4.0
 -------------
 

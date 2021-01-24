@@ -1,6 +1,6 @@
 """iotlabwebsocket module"""
 
-__version__ = "0.4.0"
+__version__ = "0.4.1"
 
 DEFAULT_APPLICATION_HOST = "localhost"
 DEFAULT_APPLICATION_PORT = "8000"
