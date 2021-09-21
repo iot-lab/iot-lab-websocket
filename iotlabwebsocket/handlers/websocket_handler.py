@@ -129,11 +129,11 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
         self.application.handle_websocket_open(self)
 
     @gen.coroutine
-    def on_message(self, data):
+    def on_message(self, message):
         """Triggered when data is received from the websocket client."""
         if self.text:
             try:
-                data = data.encode("utf-8")
+                data = message.encode("utf-8")
             except (UnicodeEncodeError, UnicodeDecodeError, AttributeError):
                 return
         self.application.handle_websocket_data(self, data)
