@@ -136,6 +136,8 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
                 data = message.encode("utf-8")
             except (UnicodeEncodeError, UnicodeDecodeError, AttributeError):
                 return
+        else:
+            data = message
         self.application.handle_websocket_data(self, data)
 
     def on_close(self):
