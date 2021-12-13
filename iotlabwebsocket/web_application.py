@@ -21,12 +21,12 @@ class WebApplication(tornado.web.Application):
         settings = {"debug": True}
         handlers = [
             (
-                r"/ws/[a-z]+/[0-9]+/[a-z0-9]+-?[a-z0-9]*-?[0-9]*/serial",
+                r"/ws/[a-z0-9\-_]+/[0-9]+/[a-z0-9]+-?[a-z0-9]*-?[0-9]*/serial",
                 WebsocketClientHandler,
                 dict(api=api, text=True),
             ),
             (
-                r"/ws/[a-z]+/[0-9]+/[a-z0-9]+-?[a-z0-9]*-?[0-9]*/serial/raw",
+                r"/ws/[a-z0-9\-_]+/[0-9]+/[a-z0-9]+-?[a-z0-9]*-?[0-9]*/serial/raw",
                 WebsocketClientHandler,
                 dict(api=api, text=False),
             ),
