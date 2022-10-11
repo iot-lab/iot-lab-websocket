@@ -11,7 +11,7 @@ LOGGER.setLevel(logging.DEBUG)
 def setup_server_logger(log_file=None, log_console=False):
     """Setup logger for client application."""
     formatter = logging.Formatter(
-        "%(asctime)-15s %(levelname)-7s " "%(filename)20s:%(lineno)-3d %(message)s"
+        "%(asctime)-15s %(levelname)-7s %(filename)20s:%(lineno)-3d %(message)s"
     )
     if log_console:
         console_handler = logging.StreamHandler(sys.stdout)
