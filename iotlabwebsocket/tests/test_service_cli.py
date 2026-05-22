@@ -26,7 +26,7 @@ class ServiceCliTest(unittest.TestCase):
         args, kwargs = init.call_args
         assert len(args) == 1
         assert args[0] == default_api
-        assert kwargs == {"use_local_api": False, "token": ""}
+        assert kwargs == {"use_local_api": False, "token": "", "debug": False}
         listen.assert_called_with("8000")
 
     def test_main_service_cli_args(self, ioloop, init, listen, stop_app):
@@ -53,7 +53,11 @@ class ServiceCliTest(unittest.TestCase):
         args, kwargs = init.call_args
         assert len(args) == 1
         assert args[0] == api_test
-        assert kwargs == {"use_local_api": True, "token": token_test}
+        assert kwargs == {
+            "use_local_api": True,
+            "token": token_test,
+            "debug": False,
+        }
         listen.assert_called_with(port_test)
 
     def test_main_service_http(self, ioloop, init, listen, stop_app):
@@ -67,7 +71,7 @@ class ServiceCliTest(unittest.TestCase):
         args, kwargs = init.call_args
         assert len(args) == 1
         assert args[0] == http_api
-        assert kwargs == {"use_local_api": False, "token": ""}
+        assert kwargs == {"use_local_api": False, "token": "", "debug": False}
         listen.assert_called_with("8000")
 
     @mock.patch("iotlabwebsocket.service_cli.setup_server_logger")
@@ -126,5 +130,9 @@ class ServiceCliTest(unittest.TestCase):
         args, kwargs = init.call_args
         assert len(args) == 1
         assert args[0] == api_test
-        assert kwargs == {"use_local_api": True, "token": token_test}
+        assert kwargs == {
+            "use_local_api": True,
+            "token": token_test,
+            "debug": False,
+        }
         listen.assert_called_with(port_test)

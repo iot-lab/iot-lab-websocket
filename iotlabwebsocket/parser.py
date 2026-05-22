@@ -71,4 +71,9 @@ def service_cli_parser():
         action="store_true",
         help="Print debug messages to console.",
     )
+    parser.add_argument(
+        "--debug",
+        action="store_true",
+        help="Enable Tornado debug mode (auto-reload, full tracebacks).",
+    )
     return parser

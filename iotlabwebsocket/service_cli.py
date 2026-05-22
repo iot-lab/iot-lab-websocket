@@ -20,7 +20,10 @@ def main(args=None):
         args.api_password,
     )
     app = WebApplication(
-        api, use_local_api=args.use_local_api, token=args.token
+        api,
+        use_local_api=args.use_local_api,
+        token=args.token,
+        debug=args.debug,
     )
     try:
         app.listen(args.port)
