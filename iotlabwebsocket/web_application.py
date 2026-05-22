@@ -54,16 +54,7 @@ class WebApplication(tornado.web.Application):
         node = websocket.node
         user = websocket.user
         site = websocket.site
-        tcp_client = self.tcp_clients[node]
-        if not self.websockets[node]:
-            # Open the tcp connection on first websocket connection.
-            asyncio.ensure_future(
-                tcp_client.start(
-                    node,
-                    on_data=self.handle_tcp_data,
-                    on_close=self.handle_tcp_close,
-                )
-            )
+
         if len(self.websockets[node]) == MAX_WEBSOCKETS_PER_NODE:
             websocket.close(
                 code=1000,
@@ -72,7 +63,9 @@ class WebApplication(tornado.web.Application):
                     f"connections to node {node}."
                 ),
             )
-        elif self.user_connections[user] == MAX_WEBSOCKETS_PER_USER:
+            return
+
+        if self.user_connections[user] == MAX_WEBSOCKETS_PER_USER:
             websocket.close(
                 code=1000,
                 reason=(
@@ -80,9 +73,20 @@ class WebApplication(tornado.web.Application):
                     f"reached for user {user} on site {site}."
                 ),
             )
-        else:
-            self.user_connections[user] += 1
-            self.websockets[node].append(websocket)
+            return
+
+        self.user_connections[user] += 1
+        self.websockets[node].append(websocket)
+
+        if len(self.websockets[node]) == 1:
+            # First websocket for this node: open the TCP connection.
+            asyncio.ensure_future(
+                self.tcp_clients[node].start(
+                    node,
+                    on_data=self.handle_tcp_data,
+                    on_close=self.handle_tcp_close,
+                )
+            )
 
     def handle_websocket_data(self, websocket, data):
         """Handle a message coming from a websocket."""
