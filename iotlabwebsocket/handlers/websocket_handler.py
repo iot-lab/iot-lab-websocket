@@ -2,6 +2,7 @@
 
 from tornado import websocket
 
+from ..api import ApiClient
 from ..logger import LOGGER
 
 
@@ -10,7 +11,7 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
     # pylint:disable=attribute-defined-outside-init
     """Class that manage websocket connections."""
 
-    def _check_path(self):
+    def _check_path(self) -> None:
         # Path structure is guaranteed correct by the routing regex.
         path_elems = self.request.path.split("/")
         if self.text:
@@ -18,13 +19,13 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
         else:
             self.site, self.experiment_id, self.node = path_elems[-5:-2]
 
-    def select_subprotocol(self, subprotocols):
+    def select_subprotocol(self, subprotocols: list[str]) -> str | None:
         """Only accept the 'token' subprotocol"""
         if "token" in subprotocols:
             return "token"
         return None
 
-    async def _check_subprotocols(self, subprotocols):
+    async def _check_subprotocols(self, subprotocols: list[str]) -> bool:
         if len(subprotocols) != 3 or subprotocols[1].strip() != "token":
             LOGGER.warning("Reject websocket connection: invalid subprotocol")
             self.set_status(401)  # Authentication failed
@@ -53,7 +54,7 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
         LOGGER.debug(f"Provided token '{req_token}' verified")
         return True
 
-    async def _check_node(self):
+    async def _check_node(self) -> bool:
         nodes = await self.api.fetch_nodes_async(self.experiment_id)
         for node in nodes:
             node_elem = node.split(".")
@@ -70,7 +71,7 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
         self.finish("Invalid node")
         return False
 
-    def initialize(self, api, text):
+    def initialize(self, api: ApiClient, text: bool) -> None:
         """Initialize the api and binary information."""
         self.api = api
         self.text = text
@@ -116,17 +117,17 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
             f"on node '{self.node}'"
         )
 
-    def check_origin(self, origin):
+    def check_origin(self, origin: str) -> bool:
         """Allow connections from anywhere."""
         return True
 
-    def open(self):
+    def open(self) -> None:
         """Accept all incoming connections."""
         self.set_nodelay(True)
         LOGGER.debug(f"Websocket connection opened for node '{self.node}'")
         self.application.handle_websocket_open(self)
 
-    def on_message(self, message):
+    def on_message(self, message: str | bytes) -> None:
         """Triggered when data is received from the websocket client."""
         if self.text:
             try:
@@ -137,7 +138,7 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
             data = message
         self.application.handle_websocket_data(self, data)
 
-    def on_close(self):
+    def on_close(self) -> None:
         """Manage the disconnection of the websocket."""
         LOGGER.info(
             f"Websocket connection closed for node '{self.node}', "

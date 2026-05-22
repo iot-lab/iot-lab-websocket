@@ -3,6 +3,7 @@
 import asyncio
 import socket
 import time
+from collections.abc import Callable
 
 from tornado import tcpclient
 from tornado.iostream import StreamClosedError
@@ -25,18 +26,23 @@ class TCPClient:
         self.on_close = None
         self.on_data = None
 
-    def send(self, data):
+    def send(self, data: bytes) -> None:
         """Send data via the TCP connection."""
         if not self.ready:
             return
         self._tcp.write(data)
 
-    def stop(self):
+    def stop(self) -> None:
         """Stop the TCP connection and close any opened websocket."""
         if self.ready:
             self._tcp.close()
 
-    async def start(self, node, on_data, on_close):
+    async def start(
+        self,
+        node: str,
+        on_data: Callable[[str, bytes], None],
+        on_close: Callable[..., None],
+    ) -> None:
         """Start the TCP connection and wait for incoming bytes."""
         self.ready = False
         self.node = node
@@ -60,7 +66,7 @@ class TCPClient:
         self.ready = True
         asyncio.ensure_future(self._read_stream())
 
-    async def _read_stream(self):
+    async def _read_stream(self) -> None:
         LOGGER.debug(
             f"Listening to TCP connection for node {self.node}:{NODE_TCP_PORT}"
         )

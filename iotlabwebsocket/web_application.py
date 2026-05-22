@@ -6,6 +6,7 @@ from collections import defaultdict
 import tornado
 
 from . import DEFAULT_API_HOST
+from .api import ApiClient
 from .clients.tcp_client import TCPClient
 from .handlers.http_handler import HttpApiRequestHandler
 from .handlers.websocket_handler import WebsocketClientHandler
@@ -18,7 +19,13 @@ MAX_WEBSOCKETS_PER_USER = 10
 class WebApplication(tornado.web.Application):
     """IoT-LAB websocket to tcp redirector."""
 
-    def __init__(self, api, use_local_api=False, token="", debug=False):
+    def __init__(
+        self,
+        api: ApiClient,
+        use_local_api: bool = False,
+        token: str = "",
+        debug: bool = False,
+    ) -> None:
         handlers = [
             (
                 r"/ws/[a-z0-9\-_]+/[0-9]+/[a-z0-9]+-?[a-z0-9]*-?[0-9]*/serial",
@@ -49,7 +56,7 @@ class WebApplication(tornado.web.Application):
 
         super().__init__(handlers, debug=debug)
 
-    def handle_websocket_open(self, websocket):
+    def handle_websocket_open(self, websocket: WebsocketClientHandler) -> None:
         """Handle the websocket connection once authentified."""
         node = websocket.node
         user = websocket.user
@@ -88,7 +95,9 @@ class WebApplication(tornado.web.Application):
                 )
             )
 
-    def handle_websocket_data(self, websocket, data):
+    def handle_websocket_data(
+        self, websocket: WebsocketClientHandler, data: bytes
+    ) -> None:
         """Handle a message coming from a websocket."""
         tcp_client = self.tcp_clients[websocket.node]
         if tcp_client.ready:
@@ -100,7 +109,9 @@ class WebApplication(tornado.web.Application):
                 f"message '{data.decode('utf-8')}'.\n"
             )
 
-    def handle_websocket_close(self, websocket):
+    def handle_websocket_close(
+        self, websocket: WebsocketClientHandler
+    ) -> None:
         """Handle the disconnection of a websocket."""
         node = websocket.node
         user = websocket.user
@@ -116,7 +127,7 @@ class WebApplication(tornado.web.Application):
             tcp_client.stop()
             self.tcp_clients.pop(node)
 
-    def handle_tcp_data(self, node, data):
+    def handle_tcp_data(self, node: str, data: bytes) -> None:
         """Forwards data from TCP connection to all websocket clients."""
         for websocket in self.websockets[node]:
             if websocket.text:
@@ -129,12 +140,14 @@ class WebApplication(tornado.web.Application):
             else:
                 websocket.write_message(data, binary=True)
 
-    def handle_tcp_close(self, node, reason="Cannot connect"):
+    def handle_tcp_close(
+        self, node: str, reason: str = "Cannot connect"
+    ) -> None:
         """Close all websockets connected to a node when TCP is closed."""
         for websocket in self.websockets[node]:
             websocket.close(code=1000, reason=reason)
 
-    def stop(self):
+    def stop(self) -> None:
         """Stop any pending websocket connection."""
         for websockets in self.websockets.values():
             for websocket in websockets:

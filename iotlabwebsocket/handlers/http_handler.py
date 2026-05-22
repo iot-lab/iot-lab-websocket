@@ -19,11 +19,11 @@ class HttpApiRequestHandler(web.RequestHandler):
 
     token = None
 
-    def initialize(self, token):
+    def initialize(self, token: str) -> None:
         """Initialize the authentication token during instantiation."""
         self.token = token
 
-    def get(self):
+    def get(self) -> None:
         """Return the authentication token."""
         experiment_id = self.request.path.split("/")[-2]
         resource = self.request.path.split("/")[-1]

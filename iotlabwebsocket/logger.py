@@ -8,7 +8,9 @@ LOGGER = logging.getLogger("iotlabwebsocket")
 LOGGER.setLevel(logging.DEBUG)
 
 
-def setup_server_logger(log_file=None, log_console=False):
+def setup_server_logger(
+    log_file: str | None = None, log_console: bool = False
+) -> None:
     """Setup logger for client application."""
     formatter = logging.Formatter(
         "%(asctime)-15s %(levelname)-7s %(filename)20s:%(lineno)-3d %(message)s"
