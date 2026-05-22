@@ -2,11 +2,12 @@
 
 import argparse
 import os
+from argparse import ArgumentParser
 
 from . import DEFAULT_API_HOST, DEFAULT_API_PORT, DEFAULT_APPLICATION_PORT
 
 
-def service_cli_parser():
+def service_cli_parser() -> ArgumentParser:
     """Return the parser of the service tool."""
     parser = argparse.ArgumentParser(
         description="Websocket service application"

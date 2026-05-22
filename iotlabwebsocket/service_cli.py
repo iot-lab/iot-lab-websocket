@@ -8,7 +8,7 @@ from .parser import service_cli_parser
 from .web_application import WebApplication
 
 
-def main(args=None):
+def main(args: list[str] | None = None) -> None:
     """Main function of the web application."""
     args = service_cli_parser().parse_args(args)
     setup_server_logger(log_file=args.log_file, log_console=args.log_console)
