@@ -13,13 +13,19 @@ def setup_server_logger(log_file=None, log_console=False):
     formatter = logging.Formatter(
         "%(asctime)-15s %(levelname)-7s %(filename)20s:%(lineno)-3d %(message)s"
     )
-    if log_console:
+    if log_console and not any(
+        isinstance(h, logging.StreamHandler) and h.stream is sys.stdout
+        for h in LOGGER.handlers
+    ):
         console_handler = logging.StreamHandler(sys.stdout)
         console_handler.setFormatter(formatter)
         console_handler.setLevel(logging.INFO)
         LOGGER.addHandler(console_handler)
 
-    if log_file is not None:
+    if log_file is not None and not any(
+        isinstance(h, RotatingFileHandler) and h.baseFilename == log_file
+        for h in LOGGER.handlers
+    ):
         server = RotatingFileHandler(
             log_file, "a", maxBytes=1000000, backupCount=1
         )
