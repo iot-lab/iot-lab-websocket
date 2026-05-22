@@ -1,38 +1,22 @@
 """Client class for REST API."""
 
 import json
+from dataclasses import dataclass
 
 import tornado
 
 from . import DEFAULT_API_HOST, DEFAULT_API_PORT
 
 
+@dataclass
 class ApiClient:
     """Class that store information about the REST API."""
 
-    def __init__(
-        self,
-        protocol,
-        host=DEFAULT_API_HOST,
-        port=DEFAULT_API_PORT,
-        username="",
-        password="",
-    ):
-        # pylint:disable=too-many-arguments
-        self.protocol = protocol
-        self.host = host
-        self.port = port
-        self.username = username
-        self.password = password
-
-    def __eq__(self, other):
-        return (
-            self.protocol == other.protocol
-            and self.host == other.host
-            and self.port == other.port
-            and self.username == other.username
-            and self.password == other.password
-        )
+    protocol: str
+    host: str = DEFAULT_API_HOST
+    port: str = DEFAULT_API_PORT
+    username: str = ""
+    password: str = ""
 
     @property
     def url(self):
