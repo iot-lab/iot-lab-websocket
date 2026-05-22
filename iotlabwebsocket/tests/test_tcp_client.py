@@ -141,6 +141,44 @@ class NodeHandlerTest(AsyncTestCase):
         on_close.assert_called_once()
 
     @gen_test
+    async def test_tcp_period_reset(self):
+        client = TCPClient()
+        sock, _ = bind_unused_port()
+        server = TCPServerStub()
+        server.add_socket(sock)
+        server.listen(NODE_TCP_PORT)
+
+        on_close = mock.Mock()
+        on_data = mock.Mock()
+
+        call_count = [0]
+
+        def _time():
+            call_count[0] += 1
+            return 0 if call_count[0] <= 2 else 2
+
+        with mock.patch(
+            "iotlabwebsocket.clients.tcp_client.time"
+        ) as mock_time:
+            mock_time.time.side_effect = _time
+            await client.start("localhost", on_data, on_close)
+            assert client.ready
+
+            server.stream.write(b"hello")
+            await asyncio.sleep(0.01)
+
+            # Second write triggers the period-elapsed branch (time returns 2),
+            # bytes are within limit so received_bytes resets (lines 87-88).
+            server.stream.write(b"world")
+            await asyncio.sleep(0.01)
+
+            client.stop()
+            await asyncio.sleep(0.01)
+
+        on_close.assert_called_once()
+        assert on_data.call_count >= 2
+
+    @gen_test
     async def test_tcp_failed_connection(self):
         client = TCPClient()
         on_close = mock.Mock()
