@@ -59,7 +59,10 @@ class ApiClient:
         kwargs = {}
         if self.username and self.password:
             kwargs.update(
-                {"auth_username": self.username, "auth_password": self.password}
+                {
+                    "auth_username": self.username,
+                    "auth_password": self.password,
+                }
             )
         return tornado.httpclient.HTTPRequest(_url, **kwargs)
 

@@ -43,7 +43,9 @@ class HttpApiRequestHandler(web.RequestHandler):
                 self.finish(msg)
                 return
 
-            LOGGER.debug(f"Received request token for experiment '{experiment_id}'")
+            LOGGER.debug(
+                f"Received request token for experiment '{experiment_id}'"
+            )
             LOGGER.debug(f"Internal token: '{self.token}'")
             self.write(json.dumps({"token": self.token}))
         elif not resource:

@@ -5,24 +5,22 @@ import json
 import sys
 
 import mock
-
 import tornado
 from tornado import gen
-from tornado.tcpserver import TCPServer
 from tornado.iostream import StreamClosedError
-from tornado.testing import AsyncHTTPTestCase, gen_test, bind_unused_port
+from tornado.tcpserver import TCPServer
+from tornado.testing import AsyncHTTPTestCase, bind_unused_port, gen_test
 
 from iotlabwebsocket.api import ApiClient
+from iotlabwebsocket.clients.tcp_client import NODE_TCP_PORT
 from iotlabwebsocket.web_application import (
-    WebApplication,
     MAX_WEBSOCKETS_PER_NODE,
     MAX_WEBSOCKETS_PER_USER,
+    WebApplication,
 )
-from iotlabwebsocket.clients.tcp_client import NODE_TCP_PORT
 
 
 class TCPServerStub(TCPServer):
-
     stream = None
 
     @gen.coroutine
@@ -37,7 +35,9 @@ class TCPServerStub(TCPServer):
 
 class TestWebApplication(AsyncHTTPTestCase):
     def get_app(self):
-        self.application = WebApplication(self.api, use_local_api=True, token="token")
+        self.application = WebApplication(
+            self.api, use_local_api=True, token="token"
+        )
         return self.application
 
     def setUp(self):
@@ -69,10 +69,10 @@ class TestWebApplication(AsyncHTTPTestCase):
 
         assert len(args) == 1
         assert args[0] == "node-1"
-        assert kwargs == dict(
-            on_data=self.application.handle_tcp_data,
-            on_close=self.application.handle_tcp_close,
-        )
+        assert kwargs == {
+            "on_data": self.application.handle_tcp_data,
+            "on_close": self.application.handle_tcp_close,
+        }
 
         # Forcing TCP client to be ready, just for the test
         self.application.tcp_clients["node-1"].ready = True
@@ -116,7 +116,9 @@ class TestWebApplication(AsyncHTTPTestCase):
     @mock.patch("iotlabwebsocket.handlers.http_handler._nodes")
     @gen_test
     def test_tcp_connection_server(self, nodes):
-        url = f"ws://localhost:{self.api.port}/ws/local/123/localhost/serial/raw"
+        url = (
+            f"ws://localhost:{self.api.port}/ws/local/123/localhost/serial/raw"
+        )
         nodes.return_value = json.dumps({"nodes": ["localhost.local"]})
 
         sock, _ = bind_unused_port()
@@ -207,7 +209,9 @@ class TestWebApplication(AsyncHTTPTestCase):
     @mock.patch("iotlabwebsocket.handlers.http_handler._nodes")
     @gen_test
     def test_application_stop(self, nodes):
-        url = f"ws://localhost:{self.api.port}/ws/local/123/localhost/serial/raw"
+        url = (
+            f"ws://localhost:{self.api.port}/ws/local/123/localhost/serial/raw"
+        )
         nodes.return_value = json.dumps({"nodes": ["localhost.local"]})
 
         sock, _ = bind_unused_port()
@@ -220,7 +224,10 @@ class TestWebApplication(AsyncHTTPTestCase):
                 url, subprotocols=["user", "token", "token"]
             )
 
-        assert len(self.application.websockets["localhost"]) == MAX_WEBSOCKETS_PER_NODE
+        assert (
+            len(self.application.websockets["localhost"])
+            == MAX_WEBSOCKETS_PER_NODE
+        )
 
         self.application.stop()
         yield gen.sleep(0.1)
@@ -238,18 +245,22 @@ class TestWebApplication(AsyncHTTPTestCase):
         server.add_socket(sock)
         server.listen(NODE_TCP_PORT)
 
-        for i in range(MAX_WEBSOCKETS_PER_USER + 10):
+        for _i in range(MAX_WEBSOCKETS_PER_USER + 10):
             _ = yield tornado.websocket.websocket_connect(
                 url, subprotocols=["user", "token", "token"]
             )
 
-        self.application.user_connections["user"] == MAX_WEBSOCKETS_PER_USER
+        assert (
+            self.application.user_connections["user"]
+            == MAX_WEBSOCKETS_PER_USER
+        )
 
         i = 1
         for websockets in self.application.websockets.values():
             websockets[0].close(code=1234, reason="Too many connections test")
             yield gen.sleep(0.1)
             assert (
-                self.application.user_connections["user"] == MAX_WEBSOCKETS_PER_USER - i
+                self.application.user_connections["user"]
+                == MAX_WEBSOCKETS_PER_USER - i
             )
             i += 1

@@ -1,7 +1,7 @@
 """Common variables module."""
 
-import sys
 import logging
+import sys
 from logging.handlers import RotatingFileHandler
 
 LOGGER = logging.getLogger("iotlabwebsocket")
@@ -20,7 +20,9 @@ def setup_server_logger(log_file=None, log_console=False):
         LOGGER.addHandler(console_handler)
 
     if log_file is not None:
-        server = RotatingFileHandler(log_file, "a", maxBytes=1000000, backupCount=1)
+        server = RotatingFileHandler(
+            log_file, "a", maxBytes=1000000, backupCount=1
+        )
         server.setFormatter(formatter)
         server.setLevel(logging.DEBUG)
         LOGGER.addHandler(server)

@@ -1,7 +1,7 @@
 """Management of the TCP connection to a node."""
 
-import time
 import socket
+import time
 
 from tornado import gen, tcpclient
 from tornado.iostream import StreamClosedError
@@ -44,12 +44,18 @@ class TCPClient:
         self.on_data = on_data
         try:
             LOGGER.debug(f"Opening TCP connection to '{node}:{NODE_TCP_PORT}'")
-            self._tcp = yield tcpclient.TCPClient().connect(node, NODE_TCP_PORT)
+            self._tcp = yield tcpclient.TCPClient().connect(
+                node, NODE_TCP_PORT
+            )
             LOGGER.debug(f"TCP connection opened on '{node}:{NODE_TCP_PORT}'")
         except (StreamClosedError, socket.gaierror):
-            LOGGER.warning(f"Cannot open TCP connection to {node}:{NODE_TCP_PORT}")
+            LOGGER.warning(
+                f"Cannot open TCP connection to {node}:{NODE_TCP_PORT}"
+            )
             # We can't connect to the node with TCP, closing all websockets
-            self.on_close(self.node, reason=f"Cannot connect to node {self.node}")
+            self.on_close(
+                self.node, reason=f"Cannot connect to node {self.node}"
+            )
             return
         LOGGER.debug("TCP connection is ready")
         self.ready = True

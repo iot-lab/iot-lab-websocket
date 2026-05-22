@@ -1,6 +1,6 @@
 """iotlabwebserial websocket connections handler."""
 
-from tornado import websocket, gen
+from tornado import gen, websocket
 
 from ..logger import LOGGER
 
@@ -39,11 +39,15 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
         api_token = yield self.api.fetch_token_async(self.experiment_id)
 
         LOGGER.debug(
-            "Fetched token '%s' for experiment id '%s'", api_token, self.experiment_id
+            "Fetched token '%s' for experiment id '%s'",
+            api_token,
+            self.experiment_id,
         )
 
         if req_token != api_token:
-            LOGGER.warning(f"Reject websocket connection: invalib token '{req_token}'")
+            LOGGER.warning(
+                f"Reject websocket connection: invalib token '{req_token}'"
+            )
             self.set_status(401)  # Authentication failed
             self.finish(f"Invalid token '{req_token}'")
             return False
@@ -94,7 +98,9 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
 
         # Verify token provided in subprotocols, since there's an asynchronous
         # call to the API, we wait for it to complete.
-        subprotocols = self.request.headers.get("Sec-WebSocket-Protocol", "").split(",")
+        subprotocols = self.request.headers.get(
+            "Sec-WebSocket-Protocol", ""
+        ).split(",")
         valid_subprotocols = yield self._check_subprotocols(subprotocols)
         if not valid_subprotocols:
             return

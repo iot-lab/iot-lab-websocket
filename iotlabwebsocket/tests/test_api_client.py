@@ -1,10 +1,10 @@
 """iotlab-websocket api client."""
 
-import json
 import io
+import json
 import unittest
-import mock
 
+import mock
 from tornado.testing import AsyncHTTPTestCase, gen_test
 
 from iotlabwebsocket.api import ApiClient
@@ -63,5 +63,5 @@ class TestApiClientSync(unittest.TestCase):
         args, kwargs = request.call_args
         assert len(args) == 1
         assert args[0] == "{}/{}/{}".format(self.api.url, "123", "")
-        assert kwargs == dict(auth_username="test", auth_password="test")
+        assert kwargs == {"auth_username": "test", "auth_password": "test"}
         assert nodes == NODES["nodes"]

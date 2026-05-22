@@ -5,10 +5,10 @@ from collections import defaultdict
 import tornado
 
 from . import DEFAULT_API_HOST
-from .logger import LOGGER
 from .clients.tcp_client import TCPClient
 from .handlers.http_handler import HttpApiRequestHandler
 from .handlers.websocket_handler import WebsocketClientHandler
+from .logger import LOGGER
 
 MAX_WEBSOCKETS_PER_NODE = 2
 MAX_WEBSOCKETS_PER_USER = 10
@@ -23,12 +23,12 @@ class WebApplication(tornado.web.Application):
             (
                 r"/ws/[a-z0-9\-_]+/[0-9]+/[a-z0-9]+-?[a-z0-9]*-?[0-9]*/serial",
                 WebsocketClientHandler,
-                dict(api=api, text=True),
+                {"api": api, "text": True},
             ),
             (
                 r"/ws/[a-z0-9\-_]+/[0-9]+/[a-z0-9]+-?[a-z0-9]*-?[0-9]*/serial/raw",
                 WebsocketClientHandler,
-                dict(api=api, text=False),
+                {"api": api, "text": False},
             ),
         ]
 
@@ -39,7 +39,7 @@ class WebApplication(tornado.web.Application):
                 (
                     r"/api/experiments/[0-9]+/.*",
                     HttpApiRequestHandler,
-                    dict(token=token),
+                    {"token": token},
                 )
             )
 
@@ -58,7 +58,9 @@ class WebApplication(tornado.web.Application):
         if not self.websockets[node]:
             # Open the tcp connection on first websocket connection.
             tcp_client.start(
-                node, on_data=self.handle_tcp_data, on_close=self.handle_tcp_close
+                node,
+                on_data=self.handle_tcp_data,
+                on_close=self.handle_tcp_close,
             )
         if len(self.websockets[node]) == MAX_WEBSOCKETS_PER_NODE:
             websocket.close(

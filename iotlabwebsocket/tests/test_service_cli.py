@@ -26,7 +26,7 @@ class ServiceCliTest(unittest.TestCase):
         args, kwargs = init.call_args
         assert len(args) == 1
         assert args[0] == default_api
-        assert kwargs == dict(use_local_api=False, token="")
+        assert kwargs == {"use_local_api": False, "token": ""}
         listen.assert_called_with("8000")
 
     def test_main_service_cli_args(self, ioloop, init, listen, stop_app):
@@ -53,7 +53,7 @@ class ServiceCliTest(unittest.TestCase):
         args, kwargs = init.call_args
         assert len(args) == 1
         assert args[0] == api_test
-        assert kwargs == dict(use_local_api=True, token=token_test)
+        assert kwargs == {"use_local_api": True, "token": token_test}
         listen.assert_called_with(port_test)
 
     def test_main_service_http(self, ioloop, init, listen, stop_app):
@@ -67,18 +67,22 @@ class ServiceCliTest(unittest.TestCase):
         args, kwargs = init.call_args
         assert len(args) == 1
         assert args[0] == http_api
-        assert kwargs == dict(use_local_api=False, token="")
+        assert kwargs == {"use_local_api": False, "token": ""}
         listen.assert_called_with("8000")
 
     @mock.patch("iotlabwebsocket.service_cli.setup_server_logger")
-    def test_main_service_logging(self, setup_logger, ioloop, init, listen, stop_app):
+    def test_main_service_logging(
+        self, setup_logger, ioloop, init, listen, stop_app
+    ):
         init.return_value = None
         log_file_test = os.path.join("/tmp/test.log")
         args = ["--log-file", log_file_test, "--log-console"]
         main(args)
 
         ioloop.assert_called_once()  # for the start
-        setup_logger.assert_called_with(log_file=log_file_test, log_console=True)
+        setup_logger.assert_called_with(
+            log_file=log_file_test, log_console=True
+        )
 
     def test_main_service_exit(self, ioloop, init, listen, stop_app):
         init.return_value = None
@@ -94,7 +98,9 @@ class ServiceCliTest(unittest.TestCase):
         api_port_test = "8080"
         username = "aaaa"
         password = "bbbb"
-        api_test = ApiClient("https", api_host_test, api_port_test, username, password)
+        api_test = ApiClient(
+            "https", api_host_test, api_port_test, username, password
+        )
         port_test = "8082"
         token_test = "test_token"
         args = [
@@ -120,5 +126,5 @@ class ServiceCliTest(unittest.TestCase):
         args, kwargs = init.call_args
         assert len(args) == 1
         assert args[0] == api_test
-        assert kwargs == dict(use_local_api=True, token=token_test)
+        assert kwargs == {"use_local_api": True, "token": token_test}
         listen.assert_called_with(port_test)
