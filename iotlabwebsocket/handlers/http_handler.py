@@ -25,33 +25,25 @@ class HttpApiRequestHandler(web.RequestHandler):
 
     def get(self):
         """Return the authentication token."""
-
         experiment_id = self.request.path.split("/")[-2]
         resource = self.request.path.split("/")[-1]
-
         self.request.headers["Content-Type"] = "application/json"
-        if resource == "token":
-            msg = None
-            if not self.token:
-                msg = "No internal token set"
 
-            if msg is not None:
+        if resource == "token":
+            if not self.token:
                 LOGGER.debug(
                     f"Token request for experiment id '{experiment_id}' failed."
                 )
                 self.set_status(400)
-                self.finish(msg)
+                self.finish("No internal token set")
                 return
-
             LOGGER.debug(
                 f"Received request token for experiment '{experiment_id}'"
             )
             LOGGER.debug(f"Internal token: '{self.token}'")
-            self.write(json.dumps({"token": self.token}))
+            self.finish(json.dumps({"token": self.token}))
         elif not resource:
-            self.write(_nodes())
+            self.finish(_nodes())
         else:
             self.set_status(404)
             self.finish(f"Invalid resource '{resource}'")
-            return
-        self.finish()
