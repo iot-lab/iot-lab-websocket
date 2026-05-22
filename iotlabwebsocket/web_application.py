@@ -18,8 +18,7 @@ MAX_WEBSOCKETS_PER_USER = 10
 class WebApplication(tornado.web.Application):
     """IoT-LAB websocket to tcp redirector."""
 
-    def __init__(self, api, use_local_api=False, token=""):
-        settings = {"debug": True}
+    def __init__(self, api, use_local_api=False, token="", debug=False):
         handlers = [
             (
                 r"/ws/[a-z0-9\-_]+/[0-9]+/[a-z0-9]+-?[a-z0-9]*-?[0-9]*/serial",
@@ -48,7 +47,7 @@ class WebApplication(tornado.web.Application):
         self.websockets = defaultdict(list)
         self.user_connections = defaultdict(int)
 
-        super().__init__(handlers, **settings)
+        super().__init__(handlers, debug=debug)
 
     def handle_websocket_open(self, websocket):
         """Handle the websocket connection once authentified."""
