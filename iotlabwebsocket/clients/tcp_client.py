@@ -83,6 +83,7 @@ class TCPClient:
                             self.node,
                             reason=(f"Node {self.node} is sending too fast"),
                         )
+                        return
                     received_bytes = 0
                     start = time.time()
 
