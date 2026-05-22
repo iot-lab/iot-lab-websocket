@@ -27,7 +27,7 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
 
     async def _check_subprotocols(self, subprotocols):
         if len(subprotocols) != 3 or subprotocols[1].strip() != "token":
-            LOGGER.warning("Reject websocket connection: invalib subprotocol")
+            LOGGER.warning("Reject websocket connection: invalid subprotocol")
             self.set_status(401)  # Authentication failed
             self.finish("Invalid subprotocols")
             return False
@@ -45,7 +45,7 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
 
         if req_token != api_token:
             LOGGER.warning(
-                f"Reject websocket connection: invalib token '{req_token}'"
+                f"Reject websocket connection: invalid token '{req_token}'"
             )
             self.set_status(401)  # Authentication failed
             self.finish(f"Invalid token '{req_token}'")
