@@ -13,7 +13,7 @@ from iotlabwebsocket.service_cli import main
 @mock.patch("iotlabwebsocket.web_application.WebApplication.stop")
 @mock.patch("iotlabwebsocket.web_application.WebApplication.listen")
 @mock.patch("iotlabwebsocket.web_application.WebApplication.__init__")
-@mock.patch("tornado.ioloop.IOLoop.instance")
+@mock.patch("tornado.ioloop.IOLoop.current")
 class ServiceCliTest(unittest.TestCase):
     def test_main_service_cli_default(self, ioloop, init, listen, stop_app):
         init.return_value = None

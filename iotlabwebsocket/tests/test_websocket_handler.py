@@ -1,11 +1,11 @@
 """iotlabwebsocket websocket handler tests."""
 
+import asyncio
 import json
 
 import pytest
 import tornado
 from mock import patch
-from tornado import gen
 from tornado.testing import AsyncHTTPTestCase, gen_test
 
 from iotlabwebsocket.api import ApiClient
@@ -20,16 +20,16 @@ class TestWebsocketHandler(AsyncHTTPTestCase):
 
     def setUp(self):
         self.api = ApiClient("http")
-        super(TestWebsocketHandler, self).setUp()
+        super().setUp()
         self.api.port = self.get_http_port()
 
     @patch("iotlabwebsocket.handlers.http_handler._nodes")
     @gen_test
-    def test_websocket_connection_raw(self, nodes, ws_open):
+    async def test_websocket_connection_raw(self, nodes, ws_open):
         url = f"ws://localhost:{self.api.port}/ws/local/123/node-1/serial/raw"
         nodes.return_value = json.dumps({"nodes": ["node-1.local"]})
 
-        connection = yield tornado.websocket.websocket_connect(
+        connection = await tornado.websocket.websocket_connect(
             url, subprotocols=["user", "token", "token"]
         )
         assert connection.selected_subprotocol == "token"
@@ -43,8 +43,8 @@ class TestWebsocketHandler(AsyncHTTPTestCase):
             ".WebApplication.handle_websocket_data"
         ) as ws_data:
             data = b"test"
-            yield connection.write_message(data, binary=True)
-            yield gen.sleep(0.1)
+            await connection.write_message(data, binary=True)
+            await asyncio.sleep(0.1)
             ws_data.assert_called_once()
             args, _ = ws_data.call_args
             assert len(args) == 2
@@ -70,17 +70,17 @@ class TestWebsocketHandler(AsyncHTTPTestCase):
             ".WebApplication.handle_websocket_close"
         ) as ws_close:
             connection.close(code=1000, reason="client exit")
-            yield gen.sleep(0.1)
+            await asyncio.sleep(0.1)
             ws_close.assert_called_once()
             ws_close.assert_called_with(ws_handler)
 
     @patch("iotlabwebsocket.handlers.http_handler._nodes")
     @gen_test
-    def test_websocket_connection_text(self, nodes, ws_open):
+    async def test_websocket_connection_text(self, nodes, ws_open):
         url = f"ws://localhost:{self.api.port}/ws/local/123/node-1/serial"
         nodes.return_value = json.dumps({"nodes": ["node-1.local"]})
 
-        connection = yield tornado.websocket.websocket_connect(
+        connection = await tornado.websocket.websocket_connect(
             url, subprotocols=["user", "token", "token"]
         )
         assert connection.selected_subprotocol == "token"
@@ -94,8 +94,8 @@ class TestWebsocketHandler(AsyncHTTPTestCase):
             ".WebApplication.handle_websocket_data"
         ) as ws_data:
             data = "test"
-            yield connection.write_message(data)
-            yield gen.sleep(0.1)
+            await connection.write_message(data)
+            await asyncio.sleep(0.1)
             ws_data.assert_called_once()
             args, _ = ws_data.call_args
             assert len(args) == 2
@@ -121,17 +121,17 @@ class TestWebsocketHandler(AsyncHTTPTestCase):
             ".WebApplication.handle_websocket_close"
         ) as ws_close:
             connection.close(code=1000, reason="client exit")
-            yield gen.sleep(0.1)
+            await asyncio.sleep(0.1)
             ws_close.assert_called_once()
             ws_close.assert_called_with(ws_handler)
 
     @patch("iotlabwebsocket.handlers.http_handler._nodes")
     @gen_test
-    def test_websocket_connection_text_invalid(self, nodes, ws_open):
+    async def test_websocket_connection_text_invalid(self, nodes, ws_open):
         url = f"ws://localhost:{self.api.port}/ws/local/123/node-1/serial"
         nodes.return_value = json.dumps({"nodes": ["node-1.local"]})
 
-        connection = yield tornado.websocket.websocket_connect(
+        connection = await tornado.websocket.websocket_connect(
             url, subprotocols=["user", "token", "token"]
         )
         assert connection.selected_subprotocol == "token"
@@ -145,8 +145,8 @@ class TestWebsocketHandler(AsyncHTTPTestCase):
             ".WebApplication.handle_websocket_data"
         ) as ws_data:
             data = "test"
-            yield connection.write_message(data)
-            yield gen.sleep(0.1)
+            await connection.write_message(data)
+            await asyncio.sleep(0.1)
             ws_data.assert_called_once()
             args, _ = ws_data.call_args
             assert len(args) == 2
@@ -155,43 +155,43 @@ class TestWebsocketHandler(AsyncHTTPTestCase):
 
             ws_data.call_count = 0
             data = b"\xaa\xbb\xcc\xff"
-            yield connection.write_message(data, binary=True)
-            yield gen.sleep(0.1)
+            await connection.write_message(data, binary=True)
+            await asyncio.sleep(0.1)
             assert ws_data.call_count == 0
 
     @gen_test
-    def test_websocket_connection_invalid_url(self, ws_open):
+    async def test_websocket_connection_invalid_url(self, ws_open):
         url = f"ws://localhost:{self.api.port}/ws/local///serial"
 
         with pytest.raises(tornado.httpclient.HTTPClientError) as exc_info:
-            _ = yield tornado.websocket.websocket_connect(url)
+            _ = await tornado.websocket.websocket_connect(url)
         assert "HTTP 404: Not Found" in str(exc_info.value)
         assert ws_open.call_count == 0
 
     @gen_test
-    def test_websocket_connection_invalid_subprotocol(self, ws_open):
+    async def test_websocket_connection_invalid_subprotocol(self, ws_open):
         url = f"ws://localhost:{self.api.port}/ws/local/123/node-123/serial"
 
         with pytest.raises(tornado.httpclient.HTTPClientError) as exc_info:
-            _ = yield tornado.websocket.websocket_connect(
+            _ = await tornado.websocket.websocket_connect(
                 url, subprotocols=["user", "token", "invalid"]
             )
         assert "HTTP 401: Unauthorized" in str(exc_info.value)
         assert ws_open.call_count == 0
 
         with pytest.raises(tornado.httpclient.HTTPClientError) as exc_info:
-            _ = yield tornado.websocket.websocket_connect(
+            _ = await tornado.websocket.websocket_connect(
                 url, subprotocols=["user", "invalid", "invalid"]
             )
         assert "HTTP 401: Unauthorized" in str(exc_info.value)
         assert ws_open.call_count == 0
 
     @gen_test
-    def test_websocket_connection_invalid_node(self, ws_open):
+    async def test_websocket_connection_invalid_node(self, ws_open):
         url = f"ws://localhost:{self.api.port}/ws/local/123/invalid-123/serial"
 
         with pytest.raises(tornado.httpclient.HTTPClientError) as exc_info:
-            _ = yield tornado.websocket.websocket_connect(
+            _ = await tornado.websocket.websocket_connect(
                 url, subprotocols=["user", "token", "token"]
             )
         assert "HTTP 401: Unauthorized" in str(exc_info.value)
@@ -200,7 +200,7 @@ class TestWebsocketHandler(AsyncHTTPTestCase):
         url = f"ws://localhost:{self.api.port}/ws/invalid/123/localhost/serial"
 
         with pytest.raises(tornado.httpclient.HTTPClientError) as exc_info:
-            _ = yield tornado.websocket.websocket_connect(
+            _ = await tornado.websocket.websocket_connect(
                 url, subprotocols=["user", "token", "token"]
             )
         assert "HTTP 401: Unauthorized" in str(exc_info.value)
