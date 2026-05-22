@@ -117,11 +117,13 @@ class WebApplication(tornado.web.Application):
         for websocket in self.websockets[node]:
             if websocket.text:
                 try:
-                    data = data.decode("utf-8")
+                    message = data.decode("utf-8")
                 except UnicodeDecodeError:
                     LOGGER.debug(f"Cannot decode message: {data}")
                     continue
-            websocket.write_message(data, binary=not websocket.text)
+                websocket.write_message(message)
+            else:
+                websocket.write_message(data, binary=True)
 
     def handle_tcp_close(self, node, reason="Cannot connect"):
         """Close all websockets connected to a node when TCP is closed."""
