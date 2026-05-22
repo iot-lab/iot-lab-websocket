@@ -1,27 +1,24 @@
 """iotlabwebsocket tcp client tests."""
 # -*- coding: utf-8 -*-
 
-import sys
 import math
+import sys
 
 import mock
-
-from tornado.tcpserver import TCPServer
-from tornado.iostream import StreamClosedError
 from tornado import gen
-
-from tornado.testing import AsyncTestCase, gen_test, bind_unused_port
+from tornado.iostream import StreamClosedError
+from tornado.tcpserver import TCPServer
+from tornado.testing import AsyncTestCase, bind_unused_port, gen_test
 
 from iotlabwebsocket.clients.tcp_client import (
-    TCPClient,
-    NODE_TCP_PORT,
     CHUNK_SIZE,
     MAX_BYTES_RECEIVED_PER_PERIOD,
+    NODE_TCP_PORT,
+    TCPClient,
 )
 
 
 class TCPServerStub(TCPServer):
-
     stream = None
     received = False
 
@@ -76,7 +73,7 @@ class NodeHandlerTest(AsyncTestCase):
         on_data.call_count = 0
 
         # Raw bytes data are correctly sent to the connected websockets
-        message = b"\xAA\xBB"
+        message = b"\xaa\xbb"
         server.stream.write(message)
         yield gen.sleep(0.01)
         assert on_data.call_count == 1
@@ -86,18 +83,15 @@ class NodeHandlerTest(AsyncTestCase):
         # Data sent by the node_handler should be received by the TCPServer:
         client.send(b"test")
         yield gen.sleep(0.01)
-        on_data.call_count == 1
         assert server.received
 
         # Sending unicode character works
-        on_data.call_count = 0
         server.received = False
         message = "éééààà°°°°"
         if sys.version_info[0] > 2:
             message = message.encode("utf-8")
         client.send(message)
         yield gen.sleep(0.01)
-        on_data.call_count == 1
         assert server.received
 
         # Sending from the node handler without an opened connection has

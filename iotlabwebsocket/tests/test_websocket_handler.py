@@ -3,16 +3,14 @@
 import json
 
 import pytest
-
-from mock import patch
-
 import tornado
+from mock import patch
 from tornado import gen
 from tornado.testing import AsyncHTTPTestCase, gen_test
 
 from iotlabwebsocket.api import ApiClient
-from iotlabwebsocket.web_application import WebApplication
 from iotlabwebsocket.handlers.websocket_handler import WebsocketClientHandler
+from iotlabwebsocket.web_application import WebApplication
 
 
 @patch("iotlabwebsocket.web_application.WebApplication.handle_websocket_open")
@@ -41,7 +39,8 @@ class TestWebsocketHandler(AsyncHTTPTestCase):
         ws_open.assert_called_once()
 
         with patch(
-            "iotlabwebsocket.web_application" ".WebApplication.handle_websocket_data"
+            "iotlabwebsocket.web_application"
+            ".WebApplication.handle_websocket_data"
         ) as ws_data:
             data = b"test"
             yield connection.write_message(data, binary=True)
@@ -55,14 +54,20 @@ class TestWebsocketHandler(AsyncHTTPTestCase):
 
             # Check some websocket handler internal methods (just for coverage)
             assert ws_handler.check_origin("http://localhost") is True
-            assert ws_handler.check_origin("https://devwww.iot-lab.info") is True
+            assert (
+                ws_handler.check_origin("https://devwww.iot-lab.info") is True
+            )
             assert ws_handler.select_subprotocol(["test", ""]) is None
-            assert ws_handler.select_subprotocol(["user", "token", "aaaa"]) == "token"
+            assert (
+                ws_handler.select_subprotocol(["user", "token", "aaaa"])
+                == "token"
+            )
             assert ws_handler.user == "user"
             assert not ws_handler.text
 
         with patch(
-            "iotlabwebsocket.web_application" ".WebApplication.handle_websocket_close"
+            "iotlabwebsocket.web_application"
+            ".WebApplication.handle_websocket_close"
         ) as ws_close:
             connection.close(code=1000, reason="client exit")
             yield gen.sleep(0.1)
@@ -85,7 +90,8 @@ class TestWebsocketHandler(AsyncHTTPTestCase):
         ws_open.assert_called_once()
 
         with patch(
-            "iotlabwebsocket.web_application" ".WebApplication.handle_websocket_data"
+            "iotlabwebsocket.web_application"
+            ".WebApplication.handle_websocket_data"
         ) as ws_data:
             data = "test"
             yield connection.write_message(data)
@@ -99,14 +105,20 @@ class TestWebsocketHandler(AsyncHTTPTestCase):
 
             # Check some websocket handler internal methods (just for coverage)
             assert ws_handler.check_origin("http://localhost") is True
-            assert ws_handler.check_origin("https://devwww.iot-lab.info") is True
+            assert (
+                ws_handler.check_origin("https://devwww.iot-lab.info") is True
+            )
             assert ws_handler.select_subprotocol(["test", ""]) is None
-            assert ws_handler.select_subprotocol(["user", "token", "aaaa"]) == "token"
+            assert (
+                ws_handler.select_subprotocol(["user", "token", "aaaa"])
+                == "token"
+            )
             assert ws_handler.user == "user"
             assert ws_handler.text
 
         with patch(
-            "iotlabwebsocket.web_application" ".WebApplication.handle_websocket_close"
+            "iotlabwebsocket.web_application"
+            ".WebApplication.handle_websocket_close"
         ) as ws_close:
             connection.close(code=1000, reason="client exit")
             yield gen.sleep(0.1)
@@ -129,7 +141,8 @@ class TestWebsocketHandler(AsyncHTTPTestCase):
         ws_open.assert_called_once()
 
         with patch(
-            "iotlabwebsocket.web_application" ".WebApplication.handle_websocket_data"
+            "iotlabwebsocket.web_application"
+            ".WebApplication.handle_websocket_data"
         ) as ws_data:
             data = "test"
             yield connection.write_message(data)

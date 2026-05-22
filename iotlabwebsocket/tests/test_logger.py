@@ -1,10 +1,10 @@
 """iotlab-websocket logger test."""
 
-import os.path
 import logging
+import os.path
 from logging.handlers import RotatingFileHandler
 
-from iotlabwebsocket.logger import setup_server_logger, LOGGER
+from iotlabwebsocket.logger import LOGGER, setup_server_logger
 
 
 def test_server_empty_logger():

@@ -2,10 +2,10 @@
 
 import tornado
 
-from .logger import LOGGER, setup_server_logger
-from .web_application import WebApplication
 from .api import ApiClient
+from .logger import LOGGER, setup_server_logger
 from .parser import service_cli_parser
+from .web_application import WebApplication
 
 
 def main(args=None):
@@ -19,7 +19,9 @@ def main(args=None):
         args.api_user,
         args.api_password,
     )
-    app = WebApplication(api, use_local_api=args.use_local_api, token=args.token)
+    app = WebApplication(
+        api, use_local_api=args.use_local_api, token=args.token
+    )
     try:
         app.listen(args.port)
         LOGGER.info(f"Application started, listening on port {args.port}")

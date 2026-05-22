@@ -1,14 +1,16 @@
 """Manage command line parsers."""
 
-import os
 import argparse
+import os
 
-from . import DEFAULT_APPLICATION_PORT, DEFAULT_API_HOST, DEFAULT_API_PORT
+from . import DEFAULT_API_HOST, DEFAULT_API_PORT, DEFAULT_APPLICATION_PORT
 
 
 def service_cli_parser():
     """Return the parser of the service tool."""
-    parser = argparse.ArgumentParser(description="Websocket service application")
+    parser = argparse.ArgumentParser(
+        description="Websocket service application"
+    )
     parser.add_argument(
         "--port",
         type=str,
@@ -30,10 +32,16 @@ def service_cli_parser():
         help="protocol used to access the REST API",
     )
     parser.add_argument(
-        "--api-host", type=str, default=DEFAULT_API_HOST, help="REST API server host"
+        "--api-host",
+        type=str,
+        default=DEFAULT_API_HOST,
+        help="REST API server host",
     )
     parser.add_argument(
-        "--api-port", type=str, default=DEFAULT_API_PORT, help="REST API server port"
+        "--api-port",
+        type=str,
+        default=DEFAULT_API_PORT,
+        help="REST API server port",
     )
     parser.add_argument(
         "--api-user",
@@ -53,9 +61,14 @@ def service_cli_parser():
         help="Start and use the local API handler.",
     )
     parser.add_argument(
-        "--log-file", type=str, default=None, help="Absolute path of the log file"
+        "--log-file",
+        type=str,
+        default=None,
+        help="Absolute path of the log file",
     )
     parser.add_argument(
-        "--log-console", action="store_true", help="Print debug messages to console."
+        "--log-console",
+        action="store_true",
+        help="Print debug messages to console.",
     )
     return parser
