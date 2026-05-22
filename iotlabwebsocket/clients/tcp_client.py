@@ -1,9 +1,10 @@
 """Management of the TCP connection to a node."""
 
+import asyncio
 import socket
 import time
 
-from tornado import gen, tcpclient
+from tornado import tcpclient
 from tornado.iostream import StreamClosedError
 
 from ..logger import LOGGER
@@ -35,8 +36,7 @@ class TCPClient:
         if self.ready:
             self._tcp.close()
 
-    @gen.coroutine
-    def start(self, node, on_data, on_close):
+    async def start(self, node, on_data, on_close):
         """Start the TCP connection and wait for incoming bytes."""
         self.ready = False
         self.node = node
@@ -44,7 +44,7 @@ class TCPClient:
         self.on_data = on_data
         try:
             LOGGER.debug(f"Opening TCP connection to '{node}:{NODE_TCP_PORT}'")
-            self._tcp = yield tcpclient.TCPClient().connect(
+            self._tcp = await tcpclient.TCPClient().connect(
                 node, NODE_TCP_PORT
             )
             LOGGER.debug(f"TCP connection opened on '{node}:{NODE_TCP_PORT}'")
@@ -52,17 +52,15 @@ class TCPClient:
             LOGGER.warning(
                 f"Cannot open TCP connection to {node}:{NODE_TCP_PORT}"
             )
-            # We can't connect to the node with TCP, closing all websockets
             self.on_close(
                 self.node, reason=f"Cannot connect to node {self.node}"
             )
             return
         LOGGER.debug("TCP connection is ready")
         self.ready = True
-        self._read_stream()
+        asyncio.ensure_future(self._read_stream())
 
-    @gen.coroutine
-    def _read_stream(self):
+    async def _read_stream(self):
         LOGGER.debug(
             f"Listening to TCP connection for node {self.node}:{NODE_TCP_PORT}"
         )
@@ -70,7 +68,7 @@ class TCPClient:
         start = time.time()
         try:
             while True:
-                data = yield self._tcp.read_bytes(CHUNK_SIZE, partial=True)
+                data = await self._tcp.read_bytes(CHUNK_SIZE, partial=True)
                 received_bytes += len(data)
 
                 # Reset stream_byte every CHECK_BYTES_RECEIVED_PERIOD seconds
@@ -81,8 +79,6 @@ class TCPClient:
                             f"received {received_bytes} bytes in "
                             f"{CHECK_BYTES_RECEIVED_PERIOD} seconds, closing."
                         )
-                        # Will close all websocket connections
-                        # and as a consequence, close the TCP connection
                         self.on_close(
                             self.node,
                             reason=(f"Node {self.node} is sending too fast"),

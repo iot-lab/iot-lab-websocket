@@ -1,6 +1,6 @@
 """iotlabwebserial websocket connections handler."""
 
-from tornado import gen, websocket
+from tornado import websocket
 
 from ..logger import LOGGER
 
@@ -25,8 +25,7 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
             return "token"
         return None
 
-    @gen.coroutine
-    def _check_subprotocols(self, subprotocols):
+    async def _check_subprotocols(self, subprotocols):
         if len(subprotocols) != 3 or subprotocols[1].strip() != "token":
             LOGGER.warning("Reject websocket connection: invalib subprotocol")
             self.set_status(401)  # Authentication failed
@@ -36,7 +35,7 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
         req_token = subprotocols[2].strip()
 
         # Fetch the token from the authentication server
-        api_token = yield self.api.fetch_token_async(self.experiment_id)
+        api_token = await self.api.fetch_token_async(self.experiment_id)
 
         LOGGER.debug(
             "Fetched token '%s' for experiment id '%s'",
@@ -55,9 +54,8 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
         LOGGER.debug(f"Provided token '{req_token}' verified")
         return True
 
-    @gen.coroutine
-    def _check_node(self):
-        nodes = yield self.api.fetch_nodes_async(self.experiment_id)
+    async def _check_node(self):
+        nodes = await self.api.fetch_nodes_async(self.experiment_id)
         for node in nodes:
             node_elem = node.split(".")
             if node_elem[0] == self.node and node_elem[1] == self.site:
@@ -78,8 +76,7 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
         self.api = api
         self.text = text
 
-    @gen.coroutine
-    def get(self, *args, **kwargs):  # pylint: disable=invalid-overridden-method
+    async def get(self, *args, **kwargs):  # pylint: disable=invalid-overridden-method
         """Triggered before any websocket connection is opened.
 
         This method checks if the url path is valid: the url path be in the
@@ -101,19 +98,19 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
         subprotocols = self.request.headers.get(
             "Sec-WebSocket-Protocol", ""
         ).split(",")
-        valid_subprotocols = yield self._check_subprotocols(subprotocols)
+        valid_subprotocols = await self._check_subprotocols(subprotocols)
         if not valid_subprotocols:
             return
 
         self.user = subprotocols[0].strip()
 
         # Check that the requested node is in the experiment
-        node_valid = yield self._check_node()
+        node_valid = await self._check_node()
         if not node_valid:
             return
 
         # Let parent class correctly configure the websocket connection
-        yield super(WebsocketClientHandler, self).get(*args, **kwargs)
+        await super().get(*args, **kwargs)
 
         LOGGER.info(
             f"Websocket connection for experiment '{self.experiment_id}' "
@@ -124,17 +121,12 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
         """Allow connections from anywhere."""
         return True
 
-    @gen.coroutine
     def open(self):
-        """Accept all incoming connections.
-
-        After 2s, if the connection is not authentified, it's closed.
-        """
+        """Accept all incoming connections."""
         self.set_nodelay(True)
         LOGGER.debug(f"Websocket connection opened for node '{self.node}'")
         self.application.handle_websocket_open(self)
 
-    @gen.coroutine
     def on_message(self, message):
         """Triggered when data is received from the websocket client."""
         if self.text:

@@ -18,17 +18,17 @@ class TestApiClientAsync(AsyncHTTPTestCase):
 
     def setUp(self):
         self.api = ApiClient("http")
-        super(TestApiClientAsync, self).setUp()
+        super().setUp()
         self.api.port = self.get_http_port()
 
     @gen_test
-    def test_fetch_nodes_async(self):
-        nodes = yield self.api.fetch_nodes_async("123")
+    async def test_fetch_nodes_async(self):
+        nodes = await self.api.fetch_nodes_async("123")
         assert nodes == NODES["nodes"]
 
     @gen_test
-    def test_fetch_token_async(self):
-        token = yield self.api.fetch_token_async("123")
+    async def test_fetch_token_async(self):
+        token = await self.api.fetch_token_async("123")
         assert token == "token"
 
 

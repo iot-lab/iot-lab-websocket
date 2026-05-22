@@ -3,7 +3,6 @@
 import json
 
 import tornado
-from tornado import gen
 
 from . import DEFAULT_API_HOST, DEFAULT_API_PORT
 
@@ -47,12 +46,11 @@ class ApiClient:
         return client.fetch(request).buffer.read()
 
     @staticmethod
-    @gen.coroutine
-    def _fetch_async(request):
+    async def _fetch_async(request):
         request.headers["Content-Type"] = "application/json"
         client = tornado.httpclient.AsyncHTTPClient()
-        response = yield client.fetch(request)
-        raise gen.Return(response.buffer.read())
+        response = await client.fetch(request)
+        return response.buffer.read()
 
     def _request(self, exp_id, resource):
         _url = f"{self.url}/{exp_id}/{resource}"
@@ -75,19 +73,17 @@ class ApiClient:
         response = ApiClient._fetch_sync(self._request(exp_id, ""))
         return ApiClient._parse_nodes_response(response.decode())
 
-    @gen.coroutine
-    def fetch_nodes_async(self, exp_id):
+    async def fetch_nodes_async(self, exp_id):
         """Fetch the list of nodes using an asynchronous call."""
-        response = yield ApiClient._fetch_async(self._request(exp_id, ""))
-        raise gen.Return(ApiClient._parse_nodes_response(response.decode()))
+        response = await ApiClient._fetch_async(self._request(exp_id, ""))
+        return ApiClient._parse_nodes_response(response.decode())
 
     def fetch_token_sync(self, exp_id):
         """Fetch the experiment token using a synchronous call."""
         response = ApiClient._fetch_sync(self._request(exp_id, "token"))
         return json.loads(response.decode())["token"]
 
-    @gen.coroutine
-    def fetch_token_async(self, exp_id):
+    async def fetch_token_async(self, exp_id):
         """Fetch the experiment token using an asynchronous call."""
-        response = yield ApiClient._fetch_async(self._request(exp_id, "token"))
-        raise gen.Return(json.loads(response.decode())["token"])
+        response = await ApiClient._fetch_async(self._request(exp_id, "token"))
+        return json.loads(response.decode())["token"]

@@ -1,5 +1,6 @@
 """iotlabwebserial main web application."""
 
+import asyncio
 from collections import defaultdict
 
 import tornado
@@ -47,7 +48,7 @@ class WebApplication(tornado.web.Application):
         self.websockets = defaultdict(list)
         self.user_connections = defaultdict(int)
 
-        super(WebApplication, self).__init__(handlers, **settings)
+        super().__init__(handlers, **settings)
 
     def handle_websocket_open(self, websocket):
         """Handle the websocket connection once authentified."""
@@ -57,10 +58,12 @@ class WebApplication(tornado.web.Application):
         tcp_client = self.tcp_clients[node]
         if not self.websockets[node]:
             # Open the tcp connection on first websocket connection.
-            tcp_client.start(
-                node,
-                on_data=self.handle_tcp_data,
-                on_close=self.handle_tcp_close,
+            asyncio.ensure_future(
+                tcp_client.start(
+                    node,
+                    on_data=self.handle_tcp_data,
+                    on_close=self.handle_tcp_close,
+                )
             )
         if len(self.websockets[node]) == MAX_WEBSOCKETS_PER_NODE:
             websocket.close(
