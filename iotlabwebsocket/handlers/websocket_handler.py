@@ -11,13 +11,12 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
     """Class that manage websocket connections."""
 
     def _check_path(self):
-        # Check path is always correct
+        # Path structure is guaranteed correct by the routing regex.
         path_elems = self.request.path.split("/")
         if self.text:
             self.site, self.experiment_id, self.node = path_elems[-4:-1]
         else:
             self.site, self.experiment_id, self.node = path_elems[-5:-2]
-        return True
 
     def select_subprotocol(self, subprotocols):
         """Only accept the 'token' subprotocol"""
