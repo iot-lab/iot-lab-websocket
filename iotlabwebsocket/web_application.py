@@ -112,7 +112,6 @@ class WebApplication(tornado.web.Application):
             LOGGER.debug(f"Closing TCP connection to node '{node}'")
             tcp_client.stop()
             self.tcp_clients.pop(node)
-            del tcp_client
 
     def handle_tcp_data(self, node, data):
         """Forwards data from TCP connection to all websocket clients."""
