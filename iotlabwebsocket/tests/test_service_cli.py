@@ -3,8 +3,7 @@
 import os
 import os.path
 import unittest
-
-import mock
+from unittest import mock
 
 from iotlabwebsocket.api import ApiClient
 from iotlabwebsocket.service_cli import main

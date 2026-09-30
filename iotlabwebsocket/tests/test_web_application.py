@@ -2,8 +2,8 @@
 
 import asyncio
 import json
+from unittest import mock
 
-import mock
 import tornado
 from tornado.iostream import StreamClosedError
 from tornado.tcpserver import TCPServer
@@ -77,7 +77,7 @@ class TestWebApplication(AsyncHTTPTestCase):
 
         # another websocket connection for the same node doesn't start a new
         # TCP connection
-        start.call_count = 0
+        start.reset_mock()
         websocket2 = await tornado.websocket.websocket_connect(
             url, subprotocols=["user", "token", "token"]
         )
@@ -142,7 +142,7 @@ class TestWebApplication(AsyncHTTPTestCase):
 
         await asyncio.sleep(0.1)
         assert websocket_srv.write_message.call_count == 1
-        websocket_srv.write_message.call_count = 0
+        websocket_srv.write_message.reset_mock()
 
         # Smoke test to check that the websocket gets a message when the TCP
         # connection is not opened yet
@@ -193,7 +193,7 @@ class TestWebApplication(AsyncHTTPTestCase):
         assert websocket_srv.write_message.call_count == 1
 
         # Send some pure binary data
-        websocket_srv.write_message.call_count = 0
+        websocket_srv.write_message.reset_mock()
         websocket_srv = self.application.websockets["localhost"][0]
         websocket_srv.write_message = mock.Mock()
         message = b"\xaa\xbb\xcc\xff"

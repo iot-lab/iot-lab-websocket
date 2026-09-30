@@ -2,10 +2,10 @@
 
 import asyncio
 import json
+from unittest.mock import patch
 
 import pytest
 import tornado
-from mock import patch
 from tornado.testing import AsyncHTTPTestCase, gen_test
 
 from iotlabwebsocket.api import ApiClient
@@ -153,7 +153,7 @@ class TestWebsocketHandler(AsyncHTTPTestCase):
             assert isinstance(args[0], WebsocketClientHandler)
             assert args[1] == data.encode("utf-8")
 
-            ws_data.call_count = 0
+            ws_data.reset_mock()
             data = b"\xaa\xbb\xcc\xff"
             await connection.write_message(data, binary=True)
             await asyncio.sleep(0.1)

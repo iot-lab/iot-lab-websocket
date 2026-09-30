@@ -2,8 +2,8 @@
 
 import asyncio
 import math
+from unittest import mock
 
-import mock
 from tornado.iostream import StreamClosedError
 from tornado.tcpserver import TCPServer
 from tornado.testing import AsyncTestCase, bind_unused_port, gen_test
@@ -54,20 +54,20 @@ class NodeHandlerTest(AsyncTestCase):
         await asyncio.sleep(0.01)
         on_data.assert_called_once()
         on_data.assert_called_with("localhost", message)
-        on_data.call_count = 0
+        on_data.reset_mock()
 
         message = b"a" * CHUNK_SIZE
         server.stream.write(message)
         await asyncio.sleep(0.01)
         on_data.assert_called_once()
         on_data.assert_called_with("localhost", message)
-        on_data.call_count = 0
+        on_data.reset_mock()
 
         message = b"a" * (CHUNK_SIZE + 1)
         server.stream.write(message)
         await asyncio.sleep(0.01)
         assert on_data.call_count == 2
-        on_data.call_count = 0
+        on_data.reset_mock()
 
         # Raw bytes data are correctly sent to the connected websockets
         message = b"\xaa\xbb"
@@ -75,7 +75,7 @@ class NodeHandlerTest(AsyncTestCase):
         await asyncio.sleep(0.01)
         assert on_data.call_count == 1
         on_data.assert_called_with("localhost", message)
-        on_data.call_count = 0
+        on_data.reset_mock()
 
         # Data sent by the node_handler should be received by the TCPServer:
         client.send(b"test")
@@ -104,7 +104,7 @@ class NodeHandlerTest(AsyncTestCase):
         assert client.ready
         assert client.node == "localhost"
 
-        on_close.call_count = 0
+        on_close.reset_mock()
         server.stream.close()
         await asyncio.sleep(0.01)
         on_close.assert_called_once()
