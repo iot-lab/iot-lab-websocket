@@ -1,6 +1,7 @@
 """iotlabwebserial main web application."""
 
 import asyncio
+import codecs
 from collections import defaultdict
 
 import tornado
@@ -54,6 +55,9 @@ class WebApplication(tornado.web.Application):
         self.tcp_clients = defaultdict(TCPClient)
         self.websockets = defaultdict(list)
         self.user_connections = defaultdict(int)
+        # One incremental decoder per node: the TCP stream is read in chunks
+        # that can end in the middle of a multi-byte UTF-8 character.
+        self.text_decoders = defaultdict(codecs.getincrementaldecoder("utf-8"))
 
         super().__init__(handlers, debug=debug)
 
@@ -128,18 +132,25 @@ class WebApplication(tornado.web.Application):
         if not self.websockets[node] and node in self.tcp_clients:
             LOGGER.debug(f"Closing TCP connection to node '{node}'")
             self.tcp_clients.pop(node).stop()
+            self.text_decoders.pop(node, None)
 
     def handle_tcp_data(self, node: str, data: bytes) -> None:
         """Forwards data from TCP connection to all websocket clients."""
+        message = ""
+        if any(websocket.text for websocket in self.websockets[node]):
+            decoder = self.text_decoders[node]
+            try:
+                # The bytes of an incomplete character are kept for the next
+                # chunk instead of failing the whole chunk.
+                message = decoder.decode(data)
+            except UnicodeDecodeError:
+                LOGGER.debug(f"Cannot decode message: {data}")
+                decoder.reset()
         for websocket in self.websockets[node]:
             try:
                 if websocket.text:
-                    try:
-                        message = data.decode("utf-8")
-                    except UnicodeDecodeError:
-                        LOGGER.debug(f"Cannot decode message: {data}")
-                        continue
-                    websocket.write_message(message)
+                    if message:
+                        websocket.write_message(message)
                 else:
                     websocket.write_message(data, binary=True)
             except WebSocketClosedError:

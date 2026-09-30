@@ -316,3 +316,24 @@ class TestWebApplication(AsyncHTTPTestCase):
         self.application.handle_websocket_close(websocket)
         stop.assert_called_once()
         assert "node-1" not in self.application.tcp_clients
+
+    def test_tcp_data_text_split_character(self):
+        websocket = mock.Mock(text=True)
+        self.application.websockets["node-1"] = [websocket]
+        data = "é°".encode("utf-8")
+
+        # Chunk boundaries fall in the middle of each character
+        self.application.handle_tcp_data("node-1", data[:1])
+        self.application.handle_tcp_data("node-1", data[1:3])
+        self.application.handle_tcp_data("node-1", data[3:])
+
+        assert websocket.write_message.call_args_list == [
+            mock.call("é"),
+            mock.call("°"),
+        ]
+
+        # Undecodable data is skipped without affecting the next chunks
+        websocket.write_message.reset_mock()
+        self.application.handle_tcp_data("node-1", b"\xff")
+        self.application.handle_tcp_data("node-1", b"ok")
+        websocket.write_message.assert_called_once_with("ok")
