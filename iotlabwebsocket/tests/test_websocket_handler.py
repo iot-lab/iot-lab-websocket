@@ -230,3 +230,25 @@ class TestWebsocketHandler(AsyncHTTPTestCase):
                 )
         assert "HTTP 503: Service Unavailable" in str(exc_info.value)
         assert ws_open.call_count == 0
+
+    @patch("iotlabwebsocket.handlers.http_handler._nodes")
+    @patch(
+        "iotlabwebsocket.api.ApiClient.fetch_token_async",
+        return_value="s3cr3t-valid",
+    )
+    @gen_test
+    async def test_websocket_tokens_not_logged(self, _, nodes, ws_open):
+        url = f"ws://localhost:{self.api.port}/ws/local/123/node-1/serial"
+        nodes.return_value = json.dumps({"nodes": ["node-1.local"]})
+
+        with self.assertLogs("iotlabwebsocket", level="DEBUG") as logs:
+            _ = await tornado.websocket.websocket_connect(
+                url, subprotocols=["user", "token", "s3cr3t-valid"]
+            )
+            with pytest.raises(tornado.httpclient.HTTPClientError) as exc_info:
+                _ = await tornado.websocket.websocket_connect(
+                    url, subprotocols=["user", "token", "s3cr3t-wrong"]
+                )
+
+        assert b"s3cr3t" not in exc_info.value.response.body
+        assert not any("s3cr3t" in line for line in logs.output)

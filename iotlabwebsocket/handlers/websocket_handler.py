@@ -38,21 +38,20 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
         # Fetch the token from the authentication server
         api_token = await self.api.fetch_token_async(self.experiment_id)
 
-        LOGGER.debug(
-            "Fetched token '%s' for experiment id '%s'",
-            api_token,
-            self.experiment_id,
-        )
+        # Token values are never logged or echoed: they give access to the
+        # nodes of the experiment.
+        LOGGER.debug(f"Fetched token for experiment id '{self.experiment_id}'")
 
         if req_token != api_token:
             LOGGER.warning(
-                f"Reject websocket connection: invalid token '{req_token}'"
+                "Reject websocket connection: invalid token for experiment "
+                f"id '{self.experiment_id}'"
             )
             self.set_status(401)  # Authentication failed
-            self.finish(f"Invalid token '{req_token}'")
+            self.finish("Invalid token")
             return False
 
-        LOGGER.debug(f"Provided token '{req_token}' verified")
+        LOGGER.debug("Provided token verified")
         return True
 
     async def _check_node(self) -> bool:

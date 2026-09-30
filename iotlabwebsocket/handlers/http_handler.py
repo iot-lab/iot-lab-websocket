@@ -39,7 +39,6 @@ class HttpApiRequestHandler(web.RequestHandler):
             LOGGER.debug(
                 f"Received request token for experiment '{experiment_id}'"
             )
-            LOGGER.debug(f"Internal token: '{self.token}'")
             self.set_header("Content-Type", "application/json")
             self.finish(json.dumps({"token": self.token}))
         elif not resource:
