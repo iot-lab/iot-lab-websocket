@@ -9,10 +9,17 @@ from tornado.httpclient import HTTPClientError
 from ..api import ApiClient
 from ..logger import LOGGER
 
+# Node output waiting to be sent to a websocket client, in bytes. Above
+# this, the client is considered stalled and is disconnected: Tornado keeps
+# everything not yet sent in memory, so a client that stops reading would
+# otherwise make the service memory grow without limit. A node sends at most
+# 15 kB per second, so this is about a minute of its output.
+MAX_PENDING_BYTES = 1_000_000
+
 
 class WebsocketClientHandler(websocket.WebSocketHandler):
     # pylint:disable=abstract-method,arguments-differ
-    # pylint:disable=attribute-defined-outside-init
+    # pylint:disable=attribute-defined-outside-init,too-many-instance-attributes
     """Class that manage websocket connections."""
 
     def _check_path(self) -> None:
@@ -107,6 +114,40 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
         """Initialize the api and binary information."""
         self.api = api
         self.text = text
+        self.pending_bytes = 0
+        self.stalled = False
+
+    def write_node_data(
+        self, message: str | bytes, size: int, binary: bool = False
+    ) -> None:
+        """Send node output, disconnecting a client that does not read it.
+
+        size is the number of bytes of node output carried by message.
+        """
+        if self.stalled:
+            return
+        if self.pending_bytes + size > MAX_PENDING_BYTES:
+            self.stalled = True
+            LOGGER.warning(
+                f"Close websocket for node '{self.node}': client does not "
+                f"read the node output, {self.pending_bytes} bytes pending"
+            )
+            self.close(
+                code=1008, reason="Client does not read the node output"
+            )
+            return
+        future = self.write_message(message, binary=binary)
+        self.pending_bytes += size
+        future.add_done_callback(
+            lambda written: self._on_written(written, size)
+        )
+
+    def _on_written(self, future: asyncio.Future, size: int) -> None:
+        self.pending_bytes -= size
+        # A write failing because the connection closed is handled by
+        # on_close: only mark the error as retrieved.
+        if not future.cancelled():
+            future.exception()
 
     async def get(self, *args, **kwargs):  # pylint: disable=invalid-overridden-method
         """Triggered before any websocket connection is opened.

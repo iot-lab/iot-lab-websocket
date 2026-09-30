@@ -263,14 +263,14 @@ class TestWebApplication(AsyncHTTPTestCase):
 
     def test_tcp_data_skips_closed_websocket(self):
         closing = mock.Mock(text=False)
-        closing.write_message.side_effect = WebSocketClosedError()
+        closing.write_node_data.side_effect = WebSocketClosedError()
         other = mock.Mock(text=False)
         self.application.websockets["node-1"] = [closing, other]
 
         # A websocket closing does not prevent the others from receiving data
         self.application.handle_tcp_data("node-1", b"data")
 
-        other.write_message.assert_called_once_with(b"data", binary=True)
+        other.write_node_data.assert_called_once_with(b"data", 4, binary=True)
 
     @mock.patch(
         "iotlabwebsocket.clients.tcp_client.TCPClient.start",
@@ -327,16 +327,16 @@ class TestWebApplication(AsyncHTTPTestCase):
         self.application.handle_tcp_data("node-1", data[1:3])
         self.application.handle_tcp_data("node-1", data[3:])
 
-        assert websocket.write_message.call_args_list == [
-            mock.call("é"),
-            mock.call("°"),
+        assert websocket.write_node_data.call_args_list == [
+            mock.call("é", 2),
+            mock.call("°", 1),
         ]
 
         # Undecodable data is skipped without affecting the next chunks
-        websocket.write_message.reset_mock()
+        websocket.write_node_data.reset_mock()
         self.application.handle_tcp_data("node-1", b"\xff")
         self.application.handle_tcp_data("node-1", b"ok")
-        websocket.write_message.assert_called_once_with("ok")
+        websocket.write_node_data.assert_called_once_with("ok", 2)
 
     def test_websocket_binary_data_without_tcp(self):
         websocket = mock.Mock(node="node-1", text=False)

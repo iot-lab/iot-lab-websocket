@@ -150,9 +150,9 @@ class WebApplication(tornado.web.Application):
             try:
                 if websocket.text:
                     if message:
-                        websocket.write_message(message)
+                        websocket.write_node_data(message, len(data))
                 else:
-                    websocket.write_message(data, binary=True)
+                    websocket.write_node_data(data, len(data), binary=True)
             except WebSocketClosedError:
                 # The websocket is closing and is removed from the list when
                 # its on_close runs: the other websockets of the node must

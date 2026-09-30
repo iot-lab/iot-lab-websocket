@@ -306,3 +306,56 @@ class TestWebsocketHandler(AsyncHTTPTestCase):
             )
         compare.assert_called_once_with(b"other", b"token")
         ws_open.assert_called_once()
+
+    @patch("iotlabwebsocket.handlers.http_handler._nodes")
+    @gen_test
+    async def test_websocket_pending_bytes(self, nodes, ws_open):
+        url = f"ws://localhost:{self.api.port}/ws/local/123/node-1/serial/raw"
+        nodes.return_value = json.dumps({"nodes": ["node-1.local"]})
+        connection = await tornado.websocket.websocket_connect(
+            url, subprotocols=["user", "token", "token"]
+        )
+        handler = ws_open.call_args.args[0]
+
+        # Node output is pending until it is sent to the client
+        handler.write_node_data(b"a" * 100, 100, binary=True)
+        assert handler.pending_bytes == 100
+        assert await connection.read_message() == b"a" * 100
+        await asyncio.sleep(0.01)
+        assert handler.pending_bytes == 0
+
+    @patch(
+        "iotlabwebsocket.handlers.websocket_handler.MAX_PENDING_BYTES", 1000
+    )
+    @patch("iotlabwebsocket.handlers.http_handler._nodes")
+    @gen_test
+    async def test_websocket_stalled_client(self, nodes, ws_open):
+        url = f"ws://localhost:{self.api.port}/ws/local/123/node-1/serial/raw"
+        nodes.return_value = json.dumps({"nodes": ["node-1.local"]})
+        connection = await tornado.websocket.websocket_connect(
+            url, subprotocols=["user", "token", "token"]
+        )
+        handler = ws_open.call_args.args[0]
+
+        # The client reads nothing: the writes never complete
+        with patch.object(
+            handler,
+            "write_message",
+            side_effect=lambda *args, **kwargs: asyncio.Future(),
+        ) as write:
+            for _ in range(10):
+                handler.write_node_data(b"a" * 100, 100, binary=True)
+            assert handler.pending_bytes == 1000
+            assert write.call_count == 10
+
+            # Above the limit, the client is disconnected
+            handler.write_node_data(b"a" * 100, 100, binary=True)
+            assert handler.stalled
+            assert write.call_count == 10
+
+            # Nothing more is sent to it
+            handler.write_node_data(b"a" * 100, 100, binary=True)
+            assert write.call_count == 10
+
+        assert await connection.read_message() is None
+        assert connection.close_code == 1008
