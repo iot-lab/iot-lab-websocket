@@ -32,16 +32,19 @@ class TestHttpApiHandlerApp(tornado.testing.AsyncHTTPTestCase):
         )
         assert response.code == expected_response.code
         assert response.body == expected_response.body
+        return response
 
     def test_valid_token_request(self):
         expected_response = Response(
             200, json.dumps({"token": "token"}).encode()
         )
-        self._check_request(expected_response)
+        response = self._check_request(expected_response)
+        assert response.headers["Content-Type"] == "application/json"
 
     def test_valid_node_request(self):
         expected_response = Response(200, json.dumps(NODES).encode())
-        self._check_request(expected_response, resource="")
+        response = self._check_request(expected_response, resource="")
+        assert response.headers["Content-Type"] == "application/json"
 
     def test_invalid_experiment_id(self):
         for path in ["/api/experiments/abc/token", "/api/experiments//token"]:

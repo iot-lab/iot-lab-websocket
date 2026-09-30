@@ -27,7 +27,6 @@ class HttpApiRequestHandler(web.RequestHandler):
         """Return the authentication token."""
         experiment_id = self.request.path.split("/")[-2]
         resource = self.request.path.split("/")[-1]
-        self.request.headers["Content-Type"] = "application/json"
 
         if resource == "token":
             if not self.token:
@@ -41,8 +40,10 @@ class HttpApiRequestHandler(web.RequestHandler):
                 f"Received request token for experiment '{experiment_id}'"
             )
             LOGGER.debug(f"Internal token: '{self.token}'")
+            self.set_header("Content-Type", "application/json")
             self.finish(json.dumps({"token": self.token}))
         elif not resource:
+            self.set_header("Content-Type", "application/json")
             self.finish(_nodes())
         else:
             self.set_status(404)
