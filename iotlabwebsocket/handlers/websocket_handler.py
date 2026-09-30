@@ -1,5 +1,7 @@
 """iotlabwebserial websocket connections handler."""
 
+import asyncio
+
 from tornado import websocket
 from tornado.httpclient import HTTPClientError
 
@@ -26,18 +28,29 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
             return "token"
         return None
 
-    async def _check_subprotocols(self, subprotocols: list[str]) -> bool:
+    def _check_subprotocols(self, subprotocols: list[str]) -> bool:
         if len(subprotocols) != 3 or subprotocols[1].strip() != "token":
             LOGGER.warning("Reject websocket connection: invalid subprotocol")
             self.set_status(401)  # Authentication failed
             self.finish("Invalid subprotocols")
             return False
+        return True
 
-        req_token = subprotocols[2].strip()
+    async def _fetch_experiment(self) -> tuple[str, list[str]]:
+        # Both requests are sent together: the connection waits for one API
+        # round trip instead of two.
+        results = await asyncio.gather(
+            self.api.fetch_token_async(self.experiment_id),
+            self.api.fetch_nodes_async(self.experiment_id),
+            return_exceptions=True,
+        )
+        for result in results:
+            if isinstance(result, Exception):
+                raise result
+        api_token, nodes = results
+        return api_token, nodes
 
-        # Fetch the token from the authentication server
-        api_token = await self.api.fetch_token_async(self.experiment_id)
-
+    def _check_token(self, req_token: str, api_token: str) -> bool:
         # Token values are never logged or echoed: they give access to the
         # nodes of the experiment.
         LOGGER.debug(f"Fetched token for experiment id '{self.experiment_id}'")
@@ -54,8 +67,7 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
         LOGGER.debug("Provided token verified")
         return True
 
-    async def _check_node(self) -> bool:
-        nodes = await self.api.fetch_nodes_async(self.experiment_id)
+    def _check_node(self, nodes: list[str]) -> bool:
         for node in nodes:
             node_elem = node.split(".")
             if node_elem[0] == self.node and node_elem[1] == self.site:
@@ -111,25 +123,27 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
         # Check path is always True
         self._check_path()
 
-        # Verify token provided in subprotocols, since there's an asynchronous
-        # call to the API, we wait for it to complete.
         subprotocols = self.request.headers.get(
             "Sec-WebSocket-Protocol", ""
         ).split(",")
+        if not self._check_subprotocols(subprotocols):
+            return
+
+        self.user = subprotocols[0].strip()
+
         try:
-            valid_subprotocols = await self._check_subprotocols(subprotocols)
-            if not valid_subprotocols:
-                return
-
-            self.user = subprotocols[0].strip()
-
-            # Check that the requested node is in the experiment
-            node_valid = await self._check_node()
-            if not node_valid:
-                return
+            api_token, nodes = await self._fetch_experiment()
         except (HTTPClientError, OSError, ValueError, KeyError) as exc:
             # API refusal or unreachable API, invalid JSON or missing field
             self._reject_api_error(exc)
+            return
+
+        # Verify the token provided in subprotocols
+        if not self._check_token(subprotocols[2].strip(), api_token):
+            return
+
+        # Check that the requested node is in the experiment
+        if not self._check_node(nodes):
             return
 
         # Let parent class correctly configure the websocket connection

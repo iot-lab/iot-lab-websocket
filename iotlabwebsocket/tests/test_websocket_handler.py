@@ -252,3 +252,39 @@ class TestWebsocketHandler(AsyncHTTPTestCase):
 
         assert b"s3cr3t" not in exc_info.value.response.body
         assert not any("s3cr3t" in line for line in logs.output)
+
+    @patch("iotlabwebsocket.handlers.http_handler._nodes")
+    @gen_test
+    async def test_websocket_api_requests_together(self, nodes, ws_open):
+        url = f"ws://localhost:{self.api.port}/ws/local/123/node-1/serial"
+        nodes.return_value = json.dumps({"nodes": ["node-1.local"]})
+        pending = []
+        started = []
+
+        def _slow(result):
+            async def _fetch(_exp_id):
+                pending.append(1)
+                started.append(len(pending))
+                await asyncio.sleep(0.05)
+                pending.pop()
+                return result
+
+            return _fetch
+
+        with (
+            patch(
+                "iotlabwebsocket.api.ApiClient.fetch_token_async",
+                side_effect=_slow("token"),
+            ),
+            patch(
+                "iotlabwebsocket.api.ApiClient.fetch_nodes_async",
+                side_effect=_slow(["node-1.local"]),
+            ),
+        ):
+            _ = await tornado.websocket.websocket_connect(
+                url, subprotocols=["user", "token", "token"]
+            )
+
+        # The token and nodes requests were pending at the same time
+        assert max(started) == 2
+        ws_open.assert_called_once()
