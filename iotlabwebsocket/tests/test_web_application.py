@@ -8,6 +8,7 @@ import tornado
 from tornado.iostream import StreamClosedError
 from tornado.tcpserver import TCPServer
 from tornado.testing import AsyncHTTPTestCase, bind_unused_port, gen_test
+from tornado.websocket import WebSocketClosedError
 
 from iotlabwebsocket.api import ApiClient
 from iotlabwebsocket.clients.tcp_client import NODE_TCP_PORT
@@ -259,3 +260,14 @@ class TestWebApplication(AsyncHTTPTestCase):
                 == MAX_WEBSOCKETS_PER_USER - i
             )
             i += 1
+
+    def test_tcp_data_skips_closed_websocket(self):
+        closing = mock.Mock(text=False)
+        closing.write_message.side_effect = WebSocketClosedError()
+        other = mock.Mock(text=False)
+        self.application.websockets["node-1"] = [closing, other]
+
+        # A websocket closing does not prevent the others from receiving data
+        self.application.handle_tcp_data("node-1", b"data")
+
+        other.write_message.assert_called_once_with(b"data", binary=True)

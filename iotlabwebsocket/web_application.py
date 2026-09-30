@@ -4,6 +4,7 @@ import asyncio
 from collections import defaultdict
 
 import tornado
+from tornado.websocket import WebSocketClosedError
 
 from . import DEFAULT_API_HOST
 from .api import ApiClient
@@ -130,15 +131,22 @@ class WebApplication(tornado.web.Application):
     def handle_tcp_data(self, node: str, data: bytes) -> None:
         """Forwards data from TCP connection to all websocket clients."""
         for websocket in self.websockets[node]:
-            if websocket.text:
-                try:
-                    message = data.decode("utf-8")
-                except UnicodeDecodeError:
-                    LOGGER.debug(f"Cannot decode message: {data}")
-                    continue
-                websocket.write_message(message)
-            else:
-                websocket.write_message(data, binary=True)
+            try:
+                if websocket.text:
+                    try:
+                        message = data.decode("utf-8")
+                    except UnicodeDecodeError:
+                        LOGGER.debug(f"Cannot decode message: {data}")
+                        continue
+                    websocket.write_message(message)
+                else:
+                    websocket.write_message(data, binary=True)
+            except WebSocketClosedError:
+                # The websocket is closing and is removed from the list when
+                # its on_close runs: the other websockets of the node must
+                # keep receiving data, so the error must not reach the TCP
+                # read loop.
+                LOGGER.debug(f"Skipping closed websocket for node '{node}'")
 
     def handle_tcp_close(
         self, node: str, reason: str = "Cannot connect"
