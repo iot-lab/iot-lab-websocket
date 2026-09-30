@@ -24,15 +24,6 @@ class ApiClient:
         return f"{self.protocol}://{self.host}:{self.port}/api/experiments"
 
     @staticmethod
-    def _fetch_sync(request: tornado.httpclient.HTTPRequest) -> bytes:
-        request.headers["Content-Type"] = "application/json"
-        client = tornado.httpclient.HTTPClient()
-        try:
-            return client.fetch(request).buffer.read()
-        finally:
-            client.close()
-
-    @staticmethod
     async def _fetch_async(request: tornado.httpclient.HTTPRequest) -> bytes:
         request.headers["Content-Type"] = "application/json"
         client = tornado.httpclient.AsyncHTTPClient()
@@ -57,20 +48,10 @@ class ApiClient:
     def _parse_nodes_response(response: str) -> list[str]:
         return json.loads(response)["nodes"]
 
-    def fetch_nodes_sync(self, exp_id: str) -> list[str]:
-        """Fetch the list of nodes using a synchronous call."""
-        response = ApiClient._fetch_sync(self._request(exp_id, ""))
-        return ApiClient._parse_nodes_response(response.decode())
-
     async def fetch_nodes_async(self, exp_id: str) -> list[str]:
         """Fetch the list of nodes using an asynchronous call."""
         response = await ApiClient._fetch_async(self._request(exp_id, ""))
         return ApiClient._parse_nodes_response(response.decode())
-
-    def fetch_token_sync(self, exp_id: str) -> str:
-        """Fetch the experiment token using a synchronous call."""
-        response = ApiClient._fetch_sync(self._request(exp_id, "token"))
-        return json.loads(response.decode())["token"]
 
     async def fetch_token_async(self, exp_id: str) -> str:
         """Fetch the experiment token using an asynchronous call."""
