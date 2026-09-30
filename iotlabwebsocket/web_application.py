@@ -111,7 +111,7 @@ class WebApplication(tornado.web.Application):
             LOGGER.debug("No TCP connection opened, skipping message")
             websocket.write_message(
                 f"No TCP connection opened, cannot send "
-                f"message '{data.decode('utf-8')}'.\n"
+                f"message '{data.decode('utf-8', errors='replace')}'.\n"
             )
 
     def handle_websocket_close(

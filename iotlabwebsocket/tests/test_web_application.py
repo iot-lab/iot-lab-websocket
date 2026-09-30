@@ -337,3 +337,14 @@ class TestWebApplication(AsyncHTTPTestCase):
         self.application.handle_tcp_data("node-1", b"\xff")
         self.application.handle_tcp_data("node-1", b"ok")
         websocket.write_message.assert_called_once_with("ok")
+
+    def test_websocket_binary_data_without_tcp(self):
+        websocket = mock.Mock(node="node-1", text=False)
+
+        # Binary data sent by a raw websocket before the TCP connection is
+        # ready is reported, not raised
+        self.application.handle_websocket_data(websocket, b"\xff")
+
+        websocket.write_message.assert_called_once_with(
+            "No TCP connection opened, cannot send message '\ufffd'.\n"
+        )
