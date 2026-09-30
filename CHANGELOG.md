@@ -1,6 +1,41 @@
 Changelog
 =========
 
+Unreleased
+----------
+
++ Require Python 3.10+, package with pyproject.toml, run on Python 3.13 in Docker
++ Use native coroutines instead of tornado.gen
++ Disable Tornado debug mode by default, add the --debug option
++ Fix node data forwarded to several websockets of a node: the first text
+  websocket changed the data seen by the next ones
++ Fix TCP connections left open when a websocket is rejected or closes while
+  the connection to the node is being opened
++ Keep forwarding node data to the other websockets when one is closing
++ Do not count a rejected websocket in the per user limit when it closes
++ Time out the connection to a node after 10 seconds
++ Keep UTF-8 characters split across TCP chunks in text mode
++ Do not fail on binary data sent before the node connection is ready
++ Answer 401 or 503 instead of 500 when the API check fails
++ Do not log or echo websocket tokens
++ Remove the unused synchronous API calls
+
+Version 0.4.5
+-------------
+
++ Add the PORT environment variable to the Docker entrypoint
++ Build and push the Docker image from Github Actions
+
+Version 0.4.4
+-------------
+
++ Allow - and _ characters in site names
+
+Version 0.4.3
+-------------
+
++ Fix environment variables passing to the application in Docker
+
 Version 0.4.2
 -------------
 
