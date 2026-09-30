@@ -29,3 +29,15 @@ Install using pip:
   ```shell
   iotlab-websocket-client --insecure --api-protocol http  --node localhost.local --exp-id 123
   ```
+
+## Benchmark
+
+`benchmarks/handshake.py` measures how long websockets opened together take
+to be accepted, with a fake REST API answering after a given delay:
+
+```shell
+python benchmarks/handshake.py --api-delay 2 --mode same
+```
+
+`--mode same` opens the websockets for the nodes of one experiment,
+`--mode distinct` opens each websocket for its own experiment.
