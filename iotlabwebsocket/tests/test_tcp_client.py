@@ -212,3 +212,21 @@ class NodeHandlerTest(AsyncTestCase):
         await asyncio.sleep(0.01)
         assert server.stream.closed()
         on_data.assert_not_called()
+
+    @mock.patch("iotlabwebsocket.clients.tcp_client.CONNECT_TIMEOUT", 0.05)
+    @gen_test
+    async def test_tcp_connect_timeout(self):
+        client = TCPClient()
+        on_close = mock.Mock()
+
+        # The node never answers the connection request
+        with mock.patch(
+            "tornado.tcpclient.TCPClient._create_stream",
+            return_value=(mock.Mock(), asyncio.Future()),
+        ):
+            await client.start("localhost", None, on_close)
+
+        assert not client.ready
+        on_close.assert_called_once_with(
+            "localhost", reason="Cannot connect to node localhost"
+        )

@@ -1,16 +1,19 @@
 """Management of the TCP connection to a node."""
 
 import asyncio
-import socket
 import time
 from collections.abc import Callable
 
 from tornado import tcpclient
 from tornado.iostream import StreamClosedError
+from tornado.util import TimeoutError as ConnectTimeoutError
 
 from ..logger import LOGGER
 
 NODE_TCP_PORT = 20000
+# A gateway whose packets are dropped would otherwise keep the websocket
+# waiting for the system TCP connect timeout (about 2 minutes).
+CONNECT_TIMEOUT = 10  # seconds
 CHUNK_SIZE = 1024
 CHECK_BYTES_RECEIVED_PERIOD = 1  # seconds
 MAX_BYTES_RECEIVED_PER_PERIOD = 15000
@@ -58,10 +61,10 @@ class TCPClient:
         try:
             LOGGER.debug(f"Opening TCP connection to '{node}:{NODE_TCP_PORT}'")
             self._tcp = await tcpclient.TCPClient().connect(
-                node, NODE_TCP_PORT
+                node, NODE_TCP_PORT, timeout=CONNECT_TIMEOUT
             )
             LOGGER.debug(f"TCP connection opened on '{node}:{NODE_TCP_PORT}'")
-        except (StreamClosedError, socket.gaierror):
+        except (StreamClosedError, ConnectTimeoutError, OSError):
             LOGGER.warning(
                 f"Cannot open TCP connection to {node}:{NODE_TCP_PORT}"
             )
