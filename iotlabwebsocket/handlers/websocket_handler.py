@@ -1,6 +1,7 @@
 """iotlabwebserial websocket connections handler."""
 
 from tornado import websocket
+from tornado.httpclient import HTTPClientError
 
 from ..api import ApiClient
 from ..logger import LOGGER
@@ -71,6 +72,23 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
         self.finish("Invalid node")
         return False
 
+    def _reject_api_error(self, exc: Exception) -> None:
+        # The API refuses the request (unknown experiment, no access): the
+        # connection is not authorized. Otherwise it cannot be checked.
+        if isinstance(exc, HTTPClientError) and 400 <= exc.code < 500:
+            LOGGER.warning(
+                f"Reject websocket connection: experiment "
+                f"'{self.experiment_id}' refused by the API ({exc})"
+            )
+            self.set_status(401)  # Authentication failed
+            self.finish("Invalid experiment")
+            return
+        LOGGER.error(
+            f"Cannot check websocket connection with the API: {exc!r}"
+        )
+        self.set_status(503)
+        self.finish("Authentication service unavailable")
+
     def initialize(self, api: ApiClient, text: bool) -> None:
         """Initialize the api and binary information."""
         self.api = api
@@ -98,15 +116,20 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
         subprotocols = self.request.headers.get(
             "Sec-WebSocket-Protocol", ""
         ).split(",")
-        valid_subprotocols = await self._check_subprotocols(subprotocols)
-        if not valid_subprotocols:
-            return
+        try:
+            valid_subprotocols = await self._check_subprotocols(subprotocols)
+            if not valid_subprotocols:
+                return
 
-        self.user = subprotocols[0].strip()
+            self.user = subprotocols[0].strip()
 
-        # Check that the requested node is in the experiment
-        node_valid = await self._check_node()
-        if not node_valid:
+            # Check that the requested node is in the experiment
+            node_valid = await self._check_node()
+            if not node_valid:
+                return
+        except (HTTPClientError, OSError, ValueError, KeyError) as exc:
+            # API refusal or unreachable API, invalid JSON or missing field
+            self._reject_api_error(exc)
             return
 
         # Let parent class correctly configure the websocket connection

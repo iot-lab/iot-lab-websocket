@@ -205,3 +205,28 @@ class TestWebsocketHandler(AsyncHTTPTestCase):
             )
         assert "HTTP 401: Unauthorized" in str(exc_info.value)
         assert ws_open.call_count == 0
+
+    @gen_test
+    async def test_websocket_connection_api_errors(self, ws_open):
+        url = f"ws://localhost:{self.api.port}/ws/local/123/node-1/serial"
+        fetch_token = "iotlabwebsocket.api.ApiClient.fetch_token_async"
+
+        # Experiment refused by the API
+        with patch(
+            fetch_token,
+            side_effect=tornado.httpclient.HTTPClientError(404),
+        ):
+            with pytest.raises(tornado.httpclient.HTTPClientError) as exc_info:
+                _ = await tornado.websocket.websocket_connect(
+                    url, subprotocols=["user", "token", "token"]
+                )
+        assert "HTTP 401: Unauthorized" in str(exc_info.value)
+
+        # API not reachable
+        with patch(fetch_token, side_effect=ConnectionRefusedError()):
+            with pytest.raises(tornado.httpclient.HTTPClientError) as exc_info:
+                _ = await tornado.websocket.websocket_connect(
+                    url, subprotocols=["user", "token", "token"]
+                )
+        assert "HTTP 503: Service Unavailable" in str(exc_info.value)
+        assert ws_open.call_count == 0
