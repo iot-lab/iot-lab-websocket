@@ -96,9 +96,10 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
     async def get(self, *args, **kwargs):  # pylint: disable=invalid-overridden-method
         """Triggered before any websocket connection is opened.
 
-        This method checks if the url path is valid: the url path be in the
-        form /ws/<experiment_id>/<node_id>.
-        This method also checks that the token provided in the websocket
+        The url path, validated by the routing regex, is in the form
+        /ws/<site>/<experiment_id>/<node>/serial, with a /raw suffix for
+        binary streams.
+        This method checks that the token provided in the websocket
         connection matches the corresponding one generated on the
         authentication host.
         Finally, it checks that the requested node belongs to the experiment
