@@ -271,3 +271,31 @@ class TestWebApplication(AsyncHTTPTestCase):
         self.application.handle_tcp_data("node-1", b"data")
 
         other.write_message.assert_called_once_with(b"data", binary=True)
+
+    @mock.patch(
+        "iotlabwebsocket.clients.tcp_client.TCPClient.start",
+        new_callable=mock.AsyncMock,
+    )
+    @gen_test
+    async def test_rejected_websocket_keeps_user_count(self, start):
+        websockets = [
+            mock.Mock(node="node-1", user="user", site="local")
+            for _ in range(MAX_WEBSOCKETS_PER_NODE + 1)
+        ]
+        for websocket in websockets:
+            self.application.handle_websocket_open(websocket)
+        await asyncio.sleep(0)
+
+        # The last one is rejected by the per node limit
+        websockets[-1].close.assert_called_once()
+        assert (
+            self.application.user_connections["user"]
+            == MAX_WEBSOCKETS_PER_NODE
+        )
+
+        # Tornado calls on_close for the rejected websocket too
+        self.application.handle_websocket_close(websockets[-1])
+        assert (
+            self.application.user_connections["user"]
+            == MAX_WEBSOCKETS_PER_NODE
+        )

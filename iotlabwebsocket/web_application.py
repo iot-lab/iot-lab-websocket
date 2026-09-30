@@ -117,9 +117,10 @@ class WebApplication(tornado.web.Application):
         node = websocket.node
         user = websocket.user
         tcp_client = self.tcp_clients[node]
+        # Only the accepted websockets were counted: a websocket rejected by
+        # handle_websocket_open is closed too and must not free a slot.
         if websocket in self.websockets[node]:
             self.websockets[node].remove(websocket)
-        if self.user_connections[user] > 0:
             self.user_connections[user] -= 1
 
         # websockets list is now empty for given node, closing tcp connection.
