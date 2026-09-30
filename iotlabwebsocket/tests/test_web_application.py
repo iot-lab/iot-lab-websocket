@@ -299,3 +299,20 @@ class TestWebApplication(AsyncHTTPTestCase):
             self.application.user_connections["user"]
             == MAX_WEBSOCKETS_PER_NODE
         )
+
+    @mock.patch("iotlabwebsocket.clients.tcp_client.TCPClient.stop")
+    @mock.patch(
+        "iotlabwebsocket.clients.tcp_client.TCPClient.start",
+        new_callable=mock.AsyncMock,
+    )
+    @gen_test
+    async def test_close_while_tcp_connecting(self, start, stop):
+        websocket = mock.Mock(node="node-1", user="user", site="local")
+        self.application.handle_websocket_open(websocket)
+        await asyncio.sleep(0)
+        assert not self.application.tcp_clients["node-1"].ready
+
+        # Last websocket closed before the TCP connection is ready
+        self.application.handle_websocket_close(websocket)
+        stop.assert_called_once()
+        assert "node-1" not in self.application.tcp_clients

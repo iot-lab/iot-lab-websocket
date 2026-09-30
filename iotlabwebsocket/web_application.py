@@ -116,18 +116,18 @@ class WebApplication(tornado.web.Application):
         """Handle the disconnection of a websocket."""
         node = websocket.node
         user = websocket.user
-        tcp_client = self.tcp_clients[node]
         # Only the accepted websockets were counted: a websocket rejected by
         # handle_websocket_open is closed too and must not free a slot.
         if websocket in self.websockets[node]:
             self.websockets[node].remove(websocket)
             self.user_connections[user] -= 1
 
-        # websockets list is now empty for given node, closing tcp connection.
-        if tcp_client.ready and not self.websockets[node]:
+        # websockets list is now empty for given node, closing tcp connection,
+        # including one still being opened: otherwise it is established with
+        # nobody to read it, and the next websocket starts a second one.
+        if not self.websockets[node] and node in self.tcp_clients:
             LOGGER.debug(f"Closing TCP connection to node '{node}'")
-            tcp_client.stop()
-            self.tcp_clients.pop(node)
+            self.tcp_clients.pop(node).stop()
 
     def handle_tcp_data(self, node: str, data: bytes) -> None:
         """Forwards data from TCP connection to all websocket clients."""

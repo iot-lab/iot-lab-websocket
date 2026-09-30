@@ -23,6 +23,7 @@ class TCPClient:
         self.ready = False
         self.node = None
         self._tcp = None
+        self._stopped = False
         self.on_close = None
         self.on_data = None
 
@@ -33,7 +34,12 @@ class TCPClient:
         self._tcp.write(data)
 
     def stop(self) -> None:
-        """Stop the TCP connection and close any opened websocket."""
+        """Stop the TCP connection and close any opened websocket.
+
+        Stopping while the connection is being opened closes it as soon as
+        it is established.
+        """
+        self._stopped = True
         if self.ready:
             self._tcp.close()
 
@@ -45,6 +51,7 @@ class TCPClient:
     ) -> None:
         """Start the TCP connection and wait for incoming bytes."""
         self.ready = False
+        self._stopped = False
         self.node = node
         self.on_close = on_close
         self.on_data = on_data
@@ -61,6 +68,10 @@ class TCPClient:
             self.on_close(
                 self.node, reason=f"Cannot connect to node {self.node}"
             )
+            return
+        if self._stopped:
+            LOGGER.debug(f"TCP connection to '{node}' no longer needed")
+            self._tcp.close()
             return
         LOGGER.debug("TCP connection is ready")
         self.ready = True

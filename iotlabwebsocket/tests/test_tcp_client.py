@@ -187,3 +187,28 @@ class NodeHandlerTest(AsyncTestCase):
         await client.start("localhost", None, on_close)
         assert not client.ready
         assert client.node == "localhost"
+
+    @gen_test
+    async def test_tcp_stop_while_connecting(self):
+        client = TCPClient()
+        sock, _ = bind_unused_port()
+        server = TCPServerStub()
+        server.add_socket(sock)
+        server.listen(NODE_TCP_PORT)
+
+        on_close = mock.Mock()
+        on_data = mock.Mock()
+
+        # Stopped before the connection is established
+        task = asyncio.ensure_future(
+            client.start("localhost", on_data, on_close)
+        )
+        await asyncio.sleep(0)
+        client.stop()
+        await task
+        assert not client.ready
+
+        # The connection opened meanwhile is closed, nothing is read from it
+        await asyncio.sleep(0.01)
+        assert server.stream.closed()
+        on_data.assert_not_called()
