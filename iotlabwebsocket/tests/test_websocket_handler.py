@@ -288,3 +288,21 @@ class TestWebsocketHandler(AsyncHTTPTestCase):
         # The token and nodes requests were pending at the same time
         assert max(started) == 2
         ws_open.assert_called_once()
+
+    @patch("iotlabwebsocket.handlers.http_handler._nodes")
+    @gen_test
+    async def test_websocket_token_compared_in_constant_time(
+        self, nodes, ws_open
+    ):
+        url = f"ws://localhost:{self.api.port}/ws/local/123/node-1/serial"
+        nodes.return_value = json.dumps({"nodes": ["node-1.local"]})
+
+        with patch(
+            "iotlabwebsocket.handlers.websocket_handler.hmac.compare_digest",
+            return_value=True,
+        ) as compare:
+            _ = await tornado.websocket.websocket_connect(
+                url, subprotocols=["user", "token", "other"]
+            )
+        compare.assert_called_once_with(b"other", b"token")
+        ws_open.assert_called_once()

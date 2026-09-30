@@ -1,6 +1,7 @@
 """iotlabwebserial websocket connections handler."""
 
 import asyncio
+import hmac
 
 from tornado import websocket
 from tornado.httpclient import HTTPClientError
@@ -55,7 +56,9 @@ class WebsocketClientHandler(websocket.WebSocketHandler):
         # nodes of the experiment.
         LOGGER.debug(f"Fetched token for experiment id '{self.experiment_id}'")
 
-        if req_token != api_token:
+        # Constant time comparison: the answer time does not tell how much
+        # of a guessed token is right.
+        if not hmac.compare_digest(req_token.encode(), api_token.encode()):
             LOGGER.warning(
                 "Reject websocket connection: invalid token for experiment "
                 f"id '{self.experiment_id}'"
