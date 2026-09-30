@@ -4,6 +4,17 @@ Changelog
 Unreleased
 ----------
 
++ Disconnect websocket clients with more than 1 MB of node output pending
+
+Version 0.5.0
+-------------
+
++ Accept the websockets opened together for an experiment with one API
+  request for its token and one for its nodes, kept 30 seconds
++ Send up to 50 API requests at the same time, and the token and nodes
+  requests of a websocket together
++ Compare websocket tokens in constant time
++ Add a benchmark of websocket connections opened together
 + Require Python 3.10+, package with pyproject.toml, run on Python 3.13 in Docker
 + Use native coroutines instead of tornado.gen
 + Disable Tornado debug mode by default, add the --debug option
